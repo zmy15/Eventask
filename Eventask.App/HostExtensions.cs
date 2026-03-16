@@ -17,6 +17,7 @@ public static class HostExtensions
         {
             builder.Services.Configure<AppOptions>(builder.Configuration.GetSection(nameof(AppOptions)));
             builder.Services.Configure<NlpOptions>(builder.Configuration.GetSection(nameof(NlpOptions)));
+            builder.Services.Configure<HolidayOptions>(builder.Configuration.GetSection(nameof(HolidayOptions)));
             return builder;
         }
 
@@ -69,6 +70,9 @@ public static class HostExtensions
 
             // 注册导航服务
             builder.Services.AddSingleton<INavigationService, NavigationService>();
+
+            // 注册日程刷新通知服务
+            builder.Services.AddSingleton<ICalendarItemRefreshService, CalendarItemRefreshService>();
 
             return builder;
         }

@@ -9,6 +9,7 @@ using Eventask.App.Services;
 using Eventask.App.Services.Generated;
 using Eventask.Domain.Dtos;
 using Eventask.Domain.Requests;
+using Microsoft.Extensions.Options;
 using Refit;
 
 namespace Eventask.App.ViewModels
@@ -18,33 +19,19 @@ namespace Eventask.App.ViewModels
     public partial class MainViewModel : ObservableObject
     {
         private readonly ChineseLunisolarCalendar _lunarCalendar = new();
-        private static readonly Dictionary<(int Month, int Day), string> _solarHolidays = new()
-        {
-            { (1, 1), "元旦" },
-            { (2, 14), "情人节" },
-            { (3, 8), "妇女节" },
-            { (4, 5), "清明节" },
-            { (5, 1), "劳动节" },
-            { (6, 1), "儿童节" },
-            { (10, 1), "国庆节" },
-            { (12, 24), "平安夜" },
-            { (12, 25), "圣诞节" }
-        };
-
-        private static readonly Dictionary<(int Month, int Day), string> _lunarHolidays = new()
-        {
-            { (1, 1), "春节" },
-            { (1, 15), "元宵节" },
-            { (5, 5), "端午节" },
-            { (7, 7), "七夕" },
-            { (8, 15), "中秋节" },
-            { (9, 9), "重阳节" }
-        };
+        private readonly Dictionary<(int Month, int Day), string> _solarHolidays;
+        private readonly Dictionary<(int Month, int Day), string> _lunarHolidays;
+        private readonly List<WeekdayHolidayOption> _weekdayHolidays;
+        private readonly Dictionary<DateTime, string> _specialDayTypes = new();
+        private readonly HashSet<int> _loadedSpecialDayYears = new();
+        private readonly Dictionary<(int Year, int Month), HashSet<DateTime>> _monthItemDateCache = new();
+        private readonly HashSet<(int Year, int Month)> _monthItemsLoading = new();
         private readonly string[] _chineseNumbers = { "一", "二", "三", "四", "五", "六", "七", "八", "九", "十" };
         private readonly INavigationService? _navigationService;
         private readonly IAuthService? _authService;
         private readonly ICalendarStateService? _calendarStateService;
         private readonly IEventaskApi? _api;
+        private readonly ICalendarItemRefreshService? _calendarItemRefreshService;
 
         // 新增标志位,防止滚动更新日期时触发数据加载
         private bool _isScrolling = false;
@@ -87,27 +74,45 @@ namespace Eventask.App.ViewModels
         public string FullDateHeaderText => $"{CurrentDate:yyyy年}";
 
         public MainViewModel()
+            : this(new HolidayOptions())
         {
-            GenerateYearGroup(CurrentDate.Year);
-            GenerateYearGroup(CurrentDate.Year - 1);
-            GenerateYearGroup(CurrentDate.Year + 1);
-
-            GenerateMonthViewData();
         }
 
         public MainViewModel(
             INavigationService navigationService,
             IAuthService authService,
             ICalendarStateService calendarStateService,
-            IEventaskApi api) : this()
+            ICalendarItemRefreshService calendarItemRefreshService,
+            IOptions<HolidayOptions> holidayOptions,
+            IEventaskApi api) : this(holidayOptions?.Value ?? new HolidayOptions())
         {
             _navigationService = navigationService;
             _authService = authService;
             _calendarStateService = calendarStateService;
             _api = api;
+            _calendarItemRefreshService = calendarItemRefreshService;
+            _calendarItemRefreshService.MonthItemsChanged += OnMonthItemsChanged;
 
             // 异步初始化日历状态
             _ = InitializeCalendarStateAsync();
+            _ = EnsureSpecialDaysLoadedAsync(CurrentDate.Year);
+            _ = EnsureMonthItemsLoadedAsync(CurrentDate.Year, CurrentDate.Month);
+        }
+
+        private MainViewModel(HolidayOptions holidayOptions)
+        {
+            holidayOptions ??= new HolidayOptions();
+            _solarHolidays = BuildHolidayMap(holidayOptions.SolarHolidays);
+            _lunarHolidays = BuildHolidayMap(holidayOptions.LunarHolidays);
+            _weekdayHolidays = holidayOptions.WeekdayHolidays
+                .Where(holiday => holiday.Month is >= 1 and <= 12 && holiday.Occurrence > 0 && !string.IsNullOrWhiteSpace(holiday.Name))
+                .ToList();
+
+            GenerateYearGroup(CurrentDate.Year);
+            GenerateYearGroup(CurrentDate.Year - 1);
+            GenerateYearGroup(CurrentDate.Year + 1);
+
+            GenerateMonthViewData();
         }
 
         /// <summary>
@@ -234,10 +239,11 @@ namespace Eventask.App.ViewModels
                         );
 
                         await _api.ItemsPostAsync(calendarId, request);
+                        _calendarItemRefreshService?.NotifyMonthItemsChanged(draft.StartDate.Value.LocalDateTime.Date);
                     }
                     else
                     {
-                        var dueDate = draft.DueDate ?? SelectedDate.Date;
+                        var dueDateOffset = draft.DueDate ?? new DateTimeOffset(SelectedDate.Date, TimeSpan.Zero);
                         var dueTime = draft.DueTime ?? new TimeSpan(18, 0, 0);
 
                         var request = new CreateScheduleItemRequest(
@@ -247,11 +253,12 @@ namespace Eventask.App.ViewModels
                             Location: draft.Location,
                             StartAt: null,
                             EndAt: null,
-                            DueAt: ToUtcDateTimeOffset(dueDate, dueTime),
+                            DueAt: ToUtcDateTimeOffset(dueDateOffset, dueTime),
                             AllDay: draft.AllDay
                         );
 
                         await _api.ItemsPostAsync(calendarId, request);
+                        _calendarItemRefreshService?.NotifyMonthItemsChanged(dueDateOffset.LocalDateTime.Date);
                     }
                 }
                 catch (ApiException ex)
@@ -487,6 +494,9 @@ namespace Eventask.App.ViewModels
             return GenerateYearGroup(maxYear + 1);
         }
 
+        private static readonly string SpecialDayRestType = "Rest";
+        private static readonly string SpecialDayWorkType = "Work";
+
         private void EnsureYearLoaded(int year)
         {
             GenerateYearGroup(year - 1);
@@ -514,6 +524,8 @@ namespace Eventask.App.ViewModels
 
         partial void OnCurrentDateChanged(DateTime value)
         {
+            _ = EnsureSpecialDaysLoadedAsync(value.Year);
+            _ = EnsureMonthItemsLoadedAsync(value.Year, value.Month);
             if (CurrentMode == CalendarMode.Month)
             {
                 GenerateMonthViewData();
@@ -532,6 +544,16 @@ namespace Eventask.App.ViewModels
             if (YearGroups.Any(y => y.Year == year))
                 return false;
 
+            var yearModel = BuildYearModel(year);
+
+            var index = YearGroups.Count(y => y.Year < year);
+            YearGroups.Insert(index, yearModel);
+
+            return true;
+        }
+
+        private YearModel BuildYearModel(int year)
+        {
             var yearModel = new YearModel { Year = year };
             for (int m = 1; m <= 12; m++)
             {
@@ -543,15 +565,28 @@ namespace Eventask.App.ViewModels
                 });
             }
 
-            var index = YearGroups.Count(y => y.Year < year);
-            YearGroups.Insert(index, yearModel);
-
-            return true;
+            return yearModel;
         }
 
         private void GenerateMonthViewData()
         {
             MonthViewDays = GetDaysForMonth(CurrentDate.Year, CurrentDate.Month, true);
+        }
+
+        private static Dictionary<(int Month, int Day), string> BuildHolidayMap(IEnumerable<FixedHolidayOption> holidays)
+        {
+            var map = new Dictionary<(int Month, int Day), string>();
+            foreach (var holiday in holidays)
+            {
+                if (holiday.Month is < 1 or > 12 || holiday.Day is < 1 or > 31 || string.IsNullOrWhiteSpace(holiday.Name))
+                {
+                    continue;
+                }
+
+                map[(holiday.Month, holiday.Day)] = holiday.Name.Trim();
+            }
+
+            return map;
         }
 
         private List<CalendarDay> GetDaysForMonth(int year, int month, bool detailedLunar)
@@ -560,20 +595,169 @@ namespace Eventask.App.ViewModels
             var firstDay = new DateTime(year, month, 1);
             int offset = (int)firstDay.DayOfWeek;
             var startDisplayDate = firstDay.AddDays(-offset);
+            _monthItemDateCache.TryGetValue((year, month), out var monthItemDates);
 
             for (int i = 0; i < 42; i++)
             {
                 var date = startDisplayDate.AddDays(i);
+                var specialDayType = GetSpecialDayType(date);
                 list.Add(new CalendarDay
                 {
                     Date = date,
                     IsToday = date.Date == DateTime.Today,
                     IsCurrentMonth = date.Month == month,
                     LunarText = detailedLunar ? GetLunarString(date) : string.Empty,
-                    HolidayName = GetHolidayName(date)
+                    HolidayName = GetHolidayName(date),
+                    IsRestDay = string.Equals(specialDayType, SpecialDayRestType, StringComparison.OrdinalIgnoreCase),
+                    IsWorkday = string.Equals(specialDayType, SpecialDayWorkType, StringComparison.OrdinalIgnoreCase),
+                    HasScheduleItem = monthItemDates?.Contains(date.Date) ?? false
                 });
             }
             return list;
+        }
+
+        private async Task EnsureMonthItemsLoadedAsync(int year, int month)
+        {
+            if (_api == null || _calendarStateService == null)
+            {
+                return;
+            }
+
+            var key = (year, month);
+            if (_monthItemDateCache.ContainsKey(key) || _monthItemsLoading.Contains(key))
+            {
+                return;
+            }
+
+            _monthItemsLoading.Add(key);
+
+            try
+            {
+                var calendarId = await _calendarStateService.EnsureCalendarSelectedAsync();
+                if (calendarId == Guid.Empty)
+                {
+                    return;
+                }
+
+                var fromDate = new DateTimeOffset(DateTime.SpecifyKind(new DateTime(year, month, 1), DateTimeKind.Unspecified), TimeSpan.Zero);
+                var toDate = new DateTimeOffset(DateTime.SpecifyKind(new DateTime(year, month, DateTime.DaysInMonth(year, month)), DateTimeKind.Unspecified), TimeSpan.Zero);
+                var items = await _api.ItemsGetAsync(calendarId, from: fromDate, to: toDate);
+
+                var dates = new HashSet<DateTime>(
+                    items
+                        .Where(item => !item.IsDeleted)
+                        .Select(item => item.Type == "Task"
+                            ? (item.IsCompleted ? null : item.DueAt?.Date)
+                            : item.StartAt?.Date)
+                        .Where(date => date.HasValue)
+                        .Select(date => date!.Value));
+
+                _monthItemDateCache[key] = dates;
+
+                if (CurrentDate.Year == year && CurrentDate.Month == month && CurrentMode == CalendarMode.Month)
+                {
+                    GenerateMonthViewData();
+                }
+            }
+            catch (ApiException ex)
+            {
+                Debug.WriteLine($"加载月度日程失败: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"加载月度日程时发生错误: {ex.Message}");
+            }
+            finally
+            {
+                _monthItemsLoading.Remove(key);
+            }
+        }
+
+        private string? GetSpecialDayType(DateTime date)
+        {
+            if (_specialDayTypes.TryGetValue(date.Date, out var specialDayType))
+            {
+                return specialDayType;
+            }
+
+            return null;
+        }
+
+        private async Task EnsureSpecialDaysLoadedAsync(int year)
+        {
+            if (_api == null)
+            {
+                return;
+            }
+
+            if (_loadedSpecialDayYears.Contains(year))
+            {
+                return;
+            }
+
+            _loadedSpecialDayYears.Add(year);
+
+            try
+            {
+                var fromDate = new DateTime(year, 1, 1);
+                var toDate = new DateTime(year, 12, 31);
+                var specialDays = await _api.SpecialDaysGetAsync(fromDate, toDate);
+                UpdateSpecialDayCache(year, specialDays);
+            }
+            catch (ApiException ex)
+            {
+                Debug.WriteLine($"加载特殊日期失败: {ex.Message}");
+                _loadedSpecialDayYears.Remove(year);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"加载特殊日期时发生错误: {ex.Message}");
+                _loadedSpecialDayYears.Remove(year);
+            }
+        }
+
+        private void UpdateSpecialDayCache(int year, IEnumerable<SpecialDayDto> specialDays)
+        {
+            var keysToRemove = _specialDayTypes.Keys.Where(date => date.Year == year).ToList();
+            foreach (var key in keysToRemove)
+            {
+                _specialDayTypes.Remove(key);
+            }
+
+            foreach (var specialDay in specialDays)
+            {
+                _specialDayTypes[specialDay.Date.Date] = specialDay.Type;
+            }
+
+            ReplaceYearGroup(year);
+
+            if (CurrentDate.Year == year && CurrentMode == CalendarMode.Month)
+            {
+                GenerateMonthViewData();
+            }
+        }
+
+        private void OnMonthItemsChanged(DateTime date)
+        {
+            RefreshMonthItems(date);
+        }
+
+        private void RefreshMonthItems(DateTime date)
+        {
+            var key = (date.Year, date.Month);
+            _monthItemDateCache.Remove(key);
+            _ = EnsureMonthItemsLoadedAsync(date.Year, date.Month);
+        }
+
+        private void ReplaceYearGroup(int year)
+        {
+            var index = YearGroups.IndexOf(YearGroups.FirstOrDefault(y => y.Year == year));
+            if (index < 0)
+            {
+                return;
+            }
+
+            YearGroups[index] = BuildYearModel(year);
         }
 
         private string? GetHolidayName(DateTime date)
@@ -583,14 +767,12 @@ namespace Eventask.App.ViewModels
                 return solarHoliday;
             }
 
-            if (date.Month == 5 && IsNthWeekdayOfMonth(date, DayOfWeek.Sunday, 2))
+            foreach (var weekdayHoliday in _weekdayHolidays)
             {
-                return "母亲节";
-            }
-
-            if (date.Month == 6 && IsNthWeekdayOfMonth(date, DayOfWeek.Sunday, 3))
-            {
-                return "父亲节";
+                if (date.Month == weekdayHoliday.Month && IsNthWeekdayOfMonth(date, weekdayHoliday.DayOfWeek, weekdayHoliday.Occurrence))
+                {
+                    return weekdayHoliday.Name;
+                }
             }
 
             try

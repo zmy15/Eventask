@@ -11,6 +11,7 @@ public static partial class ApiEndpoints
             .MapCalendars()
             .MapScheduleItems()
             .MapAttachments()
+            .MapSpecialDays()
             .MapSync();
 
         return app;

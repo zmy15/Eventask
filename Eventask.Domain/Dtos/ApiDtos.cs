@@ -52,6 +52,11 @@ public sealed record AttachmentDto (
     bool IsDeleted
 );
 
+public sealed record SpecialDayDto(
+    DateTime Date,
+    string Type
+);
+
 public sealed record SyncPullResponse (
     DateTimeOffset ServerNow,
     SyncDelta Delta

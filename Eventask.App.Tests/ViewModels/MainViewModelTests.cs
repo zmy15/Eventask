@@ -1,6 +1,9 @@
+﻿using Eventask.App.Models;
 using Eventask.App.Services;
+using Eventask.App.Services.Generated;
 using Eventask.App.ViewModels;
 using FluentAssertions;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace Eventask.App.Tests.ViewModels;
@@ -10,6 +13,7 @@ public class MainViewModelTests
     private readonly Mock<INavigationService> _mockNavigation;
     private readonly Mock<IAuthService> _mockAuthService;
     private readonly Mock<ICalendarStateService> _mockCalendarStateService;
+    private readonly Mock<IEventaskApi> _mockApi;
     private readonly MainViewModel _viewModel;
 
     public MainViewModelTests()
@@ -17,11 +21,18 @@ public class MainViewModelTests
         _mockNavigation = new Mock<INavigationService>();
         _mockAuthService = new Mock<IAuthService>();
         _mockCalendarStateService = new Mock<ICalendarStateService>();
+        _mockApi = new Mock<IEventaskApi>();
+
+        var holidayOptions = Options.Create(new HolidayOptions());
+        var refreshService = new CalendarItemRefreshService();
 
         _viewModel = new MainViewModel(
             _mockNavigation.Object,
             _mockAuthService.Object,
-            _mockCalendarStateService.Object);
+            _mockCalendarStateService.Object,
+            refreshService,
+            holidayOptions,
+            _mockApi.Object);
     }
 
     [Fact]
@@ -192,7 +203,7 @@ public class MainViewModelTests
     public void ViewModel_WithNullServices_ShouldStillInitializeBasicProperties()
     {
         // Arrange & Act
-        var viewModel = new MainViewModel(null!, null!, null!);
+        var viewModel = new MainViewModel(null!, null!, null!, new CalendarItemRefreshService(), Options.Create(new HolidayOptions()), new Mock<IEventaskApi>().Object);
 
         // Assert
         viewModel.CurrentDate.Should().BeCloseTo(DateTime.Now, TimeSpan.FromSeconds(1));

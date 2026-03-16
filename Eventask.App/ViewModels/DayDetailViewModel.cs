@@ -14,6 +14,7 @@ namespace Eventask.App.ViewModels
 		private readonly INavigationService _navigationService;
 		private readonly IEventaskApi _api;
 		private readonly ICalendarStateService _calendarStateService;
+		private readonly ICalendarItemRefreshService _calendarItemRefreshService;
 
 		[ObservableProperty]
 		private DateTime _selectedDate;
@@ -35,11 +36,13 @@ namespace Eventask.App.ViewModels
 		public DayDetailViewModel(
 			INavigationService navigationService,
 			IEventaskApi api,
-			ICalendarStateService calendarStateService)
+         ICalendarStateService calendarStateService,
+			ICalendarItemRefreshService calendarItemRefreshService)
 		{
 			_navigationService = navigationService;
 			_api = api;
 			_calendarStateService = calendarStateService;
+           _calendarItemRefreshService = calendarItemRefreshService;
 		}
 
 		public async void Initialize(DateTime date)
@@ -130,6 +133,7 @@ namespace Eventask.App.ViewModels
 
 				// 删除后通知 HasSchedule 更新
 				OnPropertyChanged(nameof(HasSchedule));
+               _calendarItemRefreshService.NotifyMonthItemsChanged(SelectedDate);
 			}
 			catch (ApiException ex)
 			{
@@ -168,6 +172,7 @@ namespace Eventask.App.ViewModels
 
 				// 修正: 添加 calendarId 参数和 body 参数
 				await _api.ItemsPutAsync(CurrentCalendarId, task.Id, updateRequest);
+               _calendarItemRefreshService.NotifyMonthItemsChanged(SelectedDate);
 			}
 			catch (ApiException ex)
 			{

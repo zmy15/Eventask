@@ -25,6 +25,7 @@ namespace Eventask.App.ViewModels
         private readonly IAttachmentService _attachmentService;
         private readonly IEventImportService _eventImportService;
         private readonly ICalendarStateService _calendarStateService;
+        private readonly ICalendarItemRefreshService _calendarItemRefreshService;
 
         [ObservableProperty]
         private EditMode _mode = EditMode.Create;
@@ -110,13 +111,15 @@ namespace Eventask.App.ViewModels
             INavigationService navigationService,
             IAttachmentService attachmentService,
             IEventImportService eventImportService,
-            ICalendarStateService calendarStateService)
+            ICalendarStateService calendarStateService,
+            ICalendarItemRefreshService calendarItemRefreshService)
         {
             _api = api;
             _navigationService = navigationService;
             _attachmentService = attachmentService;
             _eventImportService = eventImportService;
             _calendarStateService = calendarStateService;
+            _calendarItemRefreshService = calendarItemRefreshService;
         }
 
         public void InitializeForCreate(Guid calendarId, ScheduleItemType itemType, DateTime? defaultDate = null)
@@ -562,11 +565,17 @@ namespace Eventask.App.ViewModels
                     {
                         await CreateRemindersAsync();
                     }
+                    NotifyMonthItemsChanged(GetPrimaryDate());
                 }
                 else
                 {
                     await UpdateItemAsync();
                     // TODO: 同步提醒的变更（只针对日程）
+                    if (_sourceDate.HasValue)
+                    {
+                        NotifyMonthItemsChanged(_sourceDate.Value);
+                    }
+                    NotifyMonthItemsChanged(GetPrimaryDate());
                 }
 
                 // 根据模式决定导航目标
@@ -758,6 +767,21 @@ namespace Eventask.App.ViewModels
                 IsCompleted: IsCompleted
             );
             await _api.ItemsPutAsync(CalendarId, ItemId.Value, request);
+        }
+
+        private DateTime GetPrimaryDate()
+        {
+            if (ItemType == ScheduleItemType.Task)
+            {
+                return (DueDate ?? StartDate).Date;
+            }
+
+            return StartDate.Date;
+        }
+
+        private void NotifyMonthItemsChanged(DateTime date)
+        {
+            _calendarItemRefreshService.NotifyMonthItemsChanged(date);
         }
     }
 

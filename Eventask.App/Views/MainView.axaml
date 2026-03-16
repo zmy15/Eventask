@@ -31,6 +31,11 @@
             </Setter>
         </Style>
 
+        <Style Selector="Button.MonthCell[Tag=True] TextBlock.MonthDayText">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryRed}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
         <Style Selector="Button.IconButton">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -62,13 +67,47 @@
             <Setter Property="Template">
                 <ControlTemplate>
                     <Grid Background="Transparent" RowDefinitions="*,*">
-                        <TextBlock Grid.Row="0"
-                                   Text="{Binding DayNum}"
-                                   FontSize="18"
-                                   FontWeight="Medium"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Bottom"
-                                   Foreground="{DynamicResource TextBlack}"/>
+                        <Grid Grid.Row="0">
+                            <Grid HorizontalAlignment="Center" VerticalAlignment="Bottom">
+                                <Border IsVisible="{Binding HasScheduleItem}"
+                                        Background="#007AFF"
+                                        CornerRadius="15"
+                                        Width="30"
+                                        Height="30"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding DayNum}"
+                                           Classes="MonthDayText"
+                                           FontSize="18"
+                                           FontWeight="Medium"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextBlack}"/>
+                            </Grid>
+                            <TextBlock Text="休"
+                                       IsVisible="{Binding IsRestDay}"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="#007AFF"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Top"
+                                       Margin="0,0,5,0"/>
+                            <Border IsVisible="{Binding IsWorkday}"
+                                    Background="#007AFF"
+                                    CornerRadius="10"
+                                    Width="20"
+                                    Height="20"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Margin="0,0,5,0">
+                                <TextBlock Text="班"
+                                           Foreground="White"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                        </Grid>
                         <TextBlock Grid.Row="1"
                                    Text="{Binding SecondaryText}"
                                    Classes="HolidayHint"
@@ -602,7 +641,6 @@ ScrollViewer控件：
                               Foreground="{DynamicResource TextGray}"/>
                 </Button>
             </Grid>
-            <TextBlock Grid.Row="1" Text="这里是日程详情界面" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Grid>
 
     </Grid>

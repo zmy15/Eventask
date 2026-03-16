@@ -97,6 +97,27 @@ namespace Eventask.ApiService.Migrations
                     b.ToTable("CalendarMember");
                 });
 
+            modelBuilder.Entity("Eventask.Domain.Entity.Calendars.SpecialDay", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date")
+                        .IsUnique();
+
+                    b.ToTable("SpecialDays");
+                });
+
             modelBuilder.Entity("Eventask.Domain.Entity.Calendars.ScheduleItems.Reminder", b =>
                 {
                     b.Property<Guid>("Id")

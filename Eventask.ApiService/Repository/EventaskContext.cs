@@ -15,6 +15,7 @@ public class EventaskContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Calendar> Calendars { get; set; }
     public DbSet<ScheduleItem> ScheduleItems { get; set; }
+    public DbSet<SpecialDay> SpecialDays { get; set; }
     //public DbSet<Attachment> Attachments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -82,6 +83,14 @@ public class EventaskContext : DbContext
             entity.HasOne<User>()
                 .WithMany(u => u.CalendarMemberships)
                 .HasForeignKey(e => e.UserId);
+        });
+
+        builder.Entity<SpecialDay>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Date).HasColumnType("date").IsRequired();
+            entity.Property(e => e.Type).HasConversion<string>().IsRequired();
+            entity.HasIndex(e => e.Date).IsUnique();
         });
 
         builder.Entity<ScheduleItem>(entity =>

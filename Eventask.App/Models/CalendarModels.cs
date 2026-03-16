@@ -11,6 +11,9 @@ namespace Eventask.App.Models
         public string? HolidayName { get; set; }
         public bool IsHoliday => !string.IsNullOrEmpty(HolidayName);
         public string SecondaryText => string.IsNullOrEmpty(HolidayName) ? LunarText : HolidayName;
+        public bool IsRestDay { get; set; }
+        public bool IsWorkday { get; set; }
+        public bool HasScheduleItem { get; set; }
         public bool IsToday { get; set; }
         public bool IsCurrentMonth { get; set; }
     }

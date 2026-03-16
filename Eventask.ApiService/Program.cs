@@ -1,4 +1,4 @@
-using Eventask.ApiService.Endpoints;
+﻿using Eventask.ApiService.Endpoints;
 using Eventask.ApiService.Repository;
 using Eventask.ApiService.Services.Storage;
 using Eventask.ApiService.Utilities;
@@ -32,6 +32,7 @@ builder.Services.AddScoped<ICalendarRepository, CalendarRepository>();
 builder.Services.AddScoped<ICalendarMemberRepository, CalendarMemberRepository>();
 builder.Services.AddScoped<IScheduleItemRepository, ScheduleItemRepository>();
 builder.Services.AddScoped<IAttachmentRepository, AttachmentRepository>();
+builder.Services.AddScoped<ISpecialDayRepository, SpecialDayRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.Configure<ObjectStorageOptions>(builder.Configuration.GetSection(ObjectStorageOptions.SectionName));
 builder.Services.AddSingleton<IObjectStorageService, S3ObjectStorageService>();
