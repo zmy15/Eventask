@@ -1,0 +1,173 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Eventask.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="600"
+             x:DataType="vm:CalendarMembersViewModel"
+             x:Class="Eventask.App.Views.CalendarMembersView">
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="PrimaryRed">#FF3B30</SolidColorBrush>
+        <SolidColorBrush x:Key="TextBlack">#1C1C1E</SolidColorBrush>
+        <SolidColorBrush x:Key="TextGray">#8E8E93</SolidColorBrush>
+        <SolidColorBrush x:Key="BackgroundGray">#F5F5F5</SolidColorBrush>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.Ghost">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+
+        <Style Selector="TextBlock.Label">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextGray}"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#E5E5EA"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="60, Auto, *">
+        <!-- 顶部导航栏 -->
+        <Grid Grid.Row="0" Background="{DynamicResource BackgroundGray}" ColumnDefinitions="Auto, *, Auto">
+            <Button Grid.Column="0" Classes="Ghost" Command="{Binding GoBackCommand}" 
+                    Margin="15,0" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                    <PathIcon Data="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" 
+                              Foreground="{DynamicResource PrimaryRed}" Height="20" Width="20"/>
+                    <TextBlock Text="返回" Foreground="{DynamicResource PrimaryRed}" 
+                               FontSize="16" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <TextBlock Grid.Column="1" Text="{Binding CalendarName, StringFormat='成员管理 - {0}'}" 
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextBlack}"/>
+        </Grid>
+
+        <!-- 添加成员区域 -->
+        <Border Grid.Row="1" Background="White" Padding="20" Margin="0,0,0,1">
+            <StackPanel Spacing="15">
+                <TextBlock Text="添加成员" FontSize="16" FontWeight="SemiBold"/>
+                
+                <!-- 错误提示 -->
+                <Border Background="#FFEBEE" CornerRadius="8" Padding="12"
+                        IsVisible="{Binding HasError}">
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap"/>
+                </Border>
+
+                <Grid ColumnDefinitions="*, 10, Auto, 10, Auto">
+                    <TextBox Grid.Column="0" 
+                             Text="{Binding NewMemberUsername}" 
+                             Watermark="输入用户名"/>
+                    
+                    <ComboBox Grid.Column="2" 
+                              ItemsSource="{Binding AvailableRoles}"
+                              SelectedItem="{Binding SelectedRole}"
+                              Width="100">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0}">
+                                            <Binding/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    
+                    <Button Grid.Column="4" 
+                            Content="添加"
+                            Command="{Binding AddMemberCommand}"
+                            Background="{DynamicResource PrimaryRed}"
+                            Foreground="White"
+                            Padding="20,10"
+                            CornerRadius="8"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- 成员列表 -->
+        <ScrollViewer Grid.Row="2" Background="{DynamicResource BackgroundGray}">
+            <StackPanel Margin="20" Spacing="10">
+                <TextBlock Text="当前成员" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                
+                <ItemsControl ItemsSource="{Binding Members}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:CalendarMemberItemViewModel">
+                            <Border Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,5">
+                                <Grid ColumnDefinitions="Auto, *, Auto, Auto">
+                                    <!-- 用户头像 -->
+                                    <Border Grid.Column="0" 
+                                            Width="40" Height="40" 
+                                            CornerRadius="20" 
+                                            ClipToBounds="True"
+                                            Margin="0,0,12,0">
+                                        <Image Source="avares://Eventask.App/Assets/avatar.png"
+                                               Stretch="UniformToFill"/>
+                                    </Border>
+                                    
+                                    <!-- 用户信息 -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Username}" 
+                                                   FontSize="16" 
+                                                   FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding RoleDisplay}" 
+                                                   FontSize="13" 
+                                                   Foreground="{DynamicResource TextGray}"/>
+                                    </StackPanel>
+
+                                    <!-- 所有者标识 -->
+                                    <Border Grid.Column="2" 
+                                            IsVisible="{Binding IsOwner}"
+                                            Background="#FFF3E0"
+                                            CornerRadius="4"
+                                            Padding="8,4"
+                                            Margin="0,0,10,0"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="所有者" FontSize="12" Foreground="#E65100"/>
+                                    </Border>
+
+                                    <!-- 移除按钮 -->
+                                    <Button Grid.Column="3" 
+                                            Content="移除"
+                                            Command="{Binding $parent[ItemsControl].((vm:CalendarMembersViewModel)DataContext).RemoveMemberCommand}"
+                                            CommandParameter="{Binding}"
+                                            IsVisible="{Binding !IsOwner}"
+                                            Background="#FFEBEE"
+                                            Foreground="#C62828"
+                                            Padding="12,6"
+                                            CornerRadius="6"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- 空状态 -->
+                <TextBlock Text="暂无其他成员" 
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource TextGray}"
+                           IsVisible="{Binding !Members.Count}"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 加载指示器 -->
+        <Grid Grid.Row="0" Grid.RowSpan="3" 
+              Background="#80000000" 
+              IsVisible="{Binding IsLoading}">
+            <ProgressBar IsIndeterminate="True" Width="200"/>
+        </Grid>
+    </Grid>
+</UserControl>

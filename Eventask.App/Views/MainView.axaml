@@ -1,0 +1,609 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Eventask.App.ViewModels"
+             xmlns:cv="clr-namespace:Eventask.App.Converters"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="700"
+             x:DataType="vm:MainViewModel"
+             x:Class="Eventask.App.Views.MainView"
+             x:Name="Root">
+
+    <UserControl.Resources>
+        <cv:ViewModeMatchConverter x:Key="ViewModeMatchConverter"/>
+        <cv:BoolToOpacityConverter x:Key="BoolToOpacityConverter" OpacityTrue="1" OpacityFalse="0.3"/>
+        <SolidColorBrush x:Key="PrimaryRed">#FF3B30</SolidColorBrush>
+        <SolidColorBrush x:Key="TextBlack">#1C1C1E</SolidColorBrush>
+        <SolidColorBrush x:Key="TextGray">#8E8E93</SolidColorBrush>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.Ghost">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.IconButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Button.IconButton:pointerover">
+            <Setter Property="Background" Value="#F0F0F0"/>
+        </Style>
+
+        <Style Selector="TextBlock.YearDayText">
+            <Setter Property="FontSize" Value="8"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="Margin" Value="0,1"/>
+        </Style>
+        
+        <Style Selector="TextBlock.YearDayText[Tag=False]">
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+
+        <Style Selector="Button.MonthCell">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="Height" Value="60"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Grid Background="Transparent" RowDefinitions="*,*">
+                        <TextBlock Grid.Row="0"
+                                   Text="{Binding DayNum}"
+                                   FontSize="18"
+                                   FontWeight="Medium"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Bottom"
+                                   Foreground="{DynamicResource TextBlack}"/>
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding SecondaryText}"
+                                   Classes="HolidayHint"
+                                   Tag="{Binding IsHoliday}"
+                                   FontSize="10"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Top"
+                                   Foreground="{DynamicResource TextGray}"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="TextBlock.HolidayHint[Tag=True]">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryRed}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <!-- ListBox 样式:移除选中效果和边框 -->
+        <Style Selector="ListBox.YearListBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        
+        <Style Selector="ListBox.YearListBox > ListBoxItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
+        
+        <!-- 移除选中高亮效果 -->
+        <Style Selector="ListBox.YearListBox > ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        
+        <Style Selector="ListBox.YearListBox > ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+
+        <!-- 搜索结果项样式 -->
+        <Style Selector="Button.SearchResultItem">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        
+        <Style Selector="Button.SearchResultItem:pointerover">
+            <Setter Property="Background" Value="#F5F5F5"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid>
+        <!-- 年视图 -->
+        <Grid RowDefinitions="Auto, Auto, Auto, *" Margin="15,40,15,0"
+              IsVisible="{Binding CurrentMode, Converter={StaticResource ViewModeMatchConverter}, ConverterParameter=Year}">
+            
+            <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,10">
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                    <Button Classes="Ghost" Command="{Binding CreateCalendarCommand}" ToolTip.Tip="新建日历">
+                        <PathIcon Data="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" 
+                                  Foreground="{DynamicResource PrimaryRed}" Height="20" Width="20"/>
+                    </Button>
+                    <Button Classes="Ghost" Command="{Binding SelectCalendarCommand}" ToolTip.Tip="选择日历">
+                        <PathIcon Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" 
+                                  Foreground="{DynamicResource PrimaryRed}" Height="20" Width="20"/>
+                    </Button>
+                    <Button Classes="Ghost" Command="{Binding ManageCalendarMembersCommand}" ToolTip.Tip="管理成员">
+                        <PathIcon Data="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" 
+                                  Foreground="{DynamicResource PrimaryRed}" Height="20" Width="20"/>
+                    </Button>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Left" Margin="10,0,0,0">
+                    <TextBlock Text="{Binding YearHeaderText}" 
+                               FontSize="32" FontWeight="Bold" 
+                               Foreground="{DynamicResource PrimaryRed}"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top" Spacing="5">
+                    <Button Classes="Ghost" Command="{Binding RecognizeWithAiCommand}" ToolTip.Tip="AI 识别">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <PathIcon Data="M13 2L3 14h7l-1 8 10-12h-7l1-8z" 
+                                      Foreground="{DynamicResource PrimaryRed}" Height="18" Width="18"/>
+                            <TextBlock Text="AI" Foreground="{DynamicResource PrimaryRed}" FontSize="14"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="Ghost" Command="{Binding ToggleSearchCommand}" ToolTip.Tip="搜索">
+                        <PathIcon Data="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                                  Foreground="{DynamicResource PrimaryRed}" Height="20" Width="20"/>
+                    </Button>
+                    <Button Classes="Ghost" Command="{Binding AddTaskCommand}" ToolTip.Tip="新建任务">
+                        <TextBlock Text="+" FontSize="30" Foreground="{DynamicResource PrimaryRed}" Margin="0,-8,0,0"/>
+                    </Button>
+                    <Button Classes="IconButton" Command="{Binding OpenSettingsCommand}" ToolTip.Tip="设置">
+                        <PathIcon Data="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.027 7.027 0 0 0-1.62-.94l-.36-2.54A.5.5 0 0 0 12.5 2h-3a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.55-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.1 8.16a.5.5 0 0 0 .12.64l2.03 1.58c-.05.3-.08.63-.08.95 0 .32.03.65.08.95l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.44.34.7.24l2.39-.96c.49.39 1.03.71 1.62.94l.36 2.54c.05.27.27.46.5.46h3c.25 0 .46-.19.5-.46l.36-2.54c.59-.24 1.13-.55 1.62-.94l2.39.96c.26.1.56 0 .7-.24l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM11 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"
+                                  Width="20"
+                                  Height="20"
+                                  Foreground="{DynamicResource TextGray}"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- 搜索框 -->
+            <Grid Grid.Row="1" Margin="0,0,0,10" IsVisible="{Binding IsSearchVisible}">
+                <Border Background="#F5F5F5" CornerRadius="8" Padding="10,8">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBox Grid.Column="0" 
+                                 Text="{Binding SearchText}" 
+                                 Watermark="搜索日程或任务..."
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" 
+                                Classes="Ghost" 
+                                Command="{Binding SearchCommand}"
+                                VerticalAlignment="Center"
+                                ToolTip.Tip="执行搜索">
+                            <PathIcon Data="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                                      Foreground="{DynamicResource PrimaryRed}" Height="18" Width="18"/>
+                        </Button>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- 搜索结果列表 -->
+            <Grid Grid.Row="2" IsVisible="{Binding HasSearchResults}" Margin="0,0,0,10" MaxHeight="300">
+                <Border Background="White" CornerRadius="8" BorderBrush="#E0E0E0" BorderThickness="1">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding SearchResults}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SearchResultItem">
+                                    <Button Classes="SearchResultItem"
+                                            Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).SelectSearchResultCommand}"
+                                            CommandParameter="{Binding}">
+                                        <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="Auto, *">
+                                            <!-- 类型标签 -->
+                                            <Border Grid.Row="0" Grid.Column="0" 
+                                                    Background="{Binding IsTask, Converter={x:Static cv:BoolToColorConverter.Instance}}"
+                                                    CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding TypeText}" FontSize="11" Foreground="White"/>
+                                            </Border>
+                                            <!-- 标题 -->
+                                            <TextBlock Grid.Row="0" Grid.Column="1" 
+                                                       Text="{Binding Title}" 
+                                                       FontSize="14" FontWeight="Medium"
+                                                       Foreground="{DynamicResource TextBlack}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center"/>
+                                            <!-- 时间信息 -->
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                                       Text="{Binding TimeText}" 
+                                                       FontSize="12" 
+                                                       Foreground="{DynamicResource TextGray}"
+                                                       Margin="0,4,0,0"/>
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <!-- 搜索中提示 -->
+            <Grid Grid.Row="2" IsVisible="{Binding IsSearching}" Margin="0,0,0,10">
+                <Border Background="#F5F5F5" CornerRadius="8" Padding="15">
+                    <TextBlock Text="搜索中..." HorizontalAlignment="Center" Foreground="{DynamicResource TextGray}"/>
+                </Border>
+            </Grid>
+
+            <!-- 
+ScrollViewer控件：
+作用：提供滚动功能的容器，允许内容超出可见区域时滚动查看
+属性：
+  Grid.Row="3" - 位于Grid布局的第3行
+  x:Name="MonthGroupsScrollViewer" - 控件名称，用于代码后台引用
+  ScrollChanged="YearView_ScrollChanged" - 滚动时触发的事件处理程序
+  HorizontalScrollBarVisibility="Disabled" - 禁用水平滚动条
+  VerticalScrollBarVisibility="Auto" - 垂直滚动条自动显示（当内容超出时显示）
+-->
+<ScrollViewer Grid.Row="3" 
+               x:Name="MonthGroupsScrollViewer"
+               ScrollChanged="YearView_ScrollChanged"
+               HorizontalScrollBarVisibility="Disabled"
+               VerticalScrollBarVisibility="Auto">
+     
+     <!-- 
+     ListBox控件：
+     作用：显示项目列表，支持选择功能
+     属性：
+       ItemsSource="{Binding YearGroups}" - 绑定到ViewModel中的YearGroups集合
+       Classes="YearListBox" - 应用名为"YearListBox"的自定义样式类
+       SelectionMode="Single" - 允许单选模式
+       x:Name="YearListBox" - 控件名称
+     -->
+     <ListBox ItemsSource="{Binding YearGroups}"
+              Classes="YearListBox"
+              SelectionMode="Single"
+              x:Name="YearListBox">
+         
+         <!-- 
+         ListBox.ItemsPanel：
+         作用：定义ListBox项目的布局面板
+         -->
+         <ListBox.ItemsPanel>
+             <ItemsPanelTemplate>
+                 <!-- 
+                 VirtualizingStackPanel：
+                 作用：虚拟化垂直堆叠面板，提高大量项目时的性能
+                 属性：
+                   Orientation="Vertical" - 垂直方向排列项目
+                 -->
+                 <VirtualizingStackPanel Orientation="Vertical"/>
+             </ItemsPanelTemplate>
+         </ListBox.ItemsPanel>
+         
+         <!-- 
+         ListBox.ItemTemplate：
+         作用：定义每个列表项的数据模板，指定如何显示YearGroups中的每个元素
+         -->
+         <ListBox.ItemTemplate>
+             <DataTemplate>
+                 <!-- 
+                 StackPanel：
+                 作用：垂直堆叠子元素
+                 属性：
+                   Margin="0,0,0,30" - 下边距30，为年份分组之间添加间距
+                 -->
+                 <StackPanel Margin="0,0,0,30">
+                     <!-- 
+                     TextBlock：
+                     作用：显示年份标题
+                     属性：
+                       Text="{Binding YearHeader}" - 绑定到YearGroup的YearHeader属性
+                       FontSize="24" - 字体大小24
+                       FontWeight="Bold" - 字体加粗
+                       Foreground="#333333" - 深灰色文字颜色
+                       Margin="5,0,0,15" - 左间距5，下间距15，与月份内容分开
+                     -->
+                     <TextBlock Text="{Binding YearHeader}" 
+                                FontSize="24" FontWeight="Bold" 
+                                Foreground="#333333" Margin="5,0,0,15"/>
+                     
+                     <!-- 
+                     ItemsControl：
+                     作用：显示Months集合中的月份数据
+                     属性：
+                       ItemsSource="{Binding Months}" - 绑定到YearGroup的Months集合
+                     -->
+                     <ItemsControl ItemsSource="{Binding Months}">
+                         <!-- 
+                         ItemsControl.ItemsPanel：
+                         作用：定义月份项的布局面板
+                         -->
+                         <ItemsControl.ItemsPanel>
+                             <ItemsPanelTemplate>
+                                 <!-- 
+                                 UniformGrid：
+                                 作用：均匀网格布局，每个单元格大小相同
+                                 属性：
+                                   Columns="3" - 3列布局，每行显示3个月份
+                                 -->
+                                 <UniformGrid Columns="3" />
+                             </ItemsPanelTemplate>
+                         </ItemsControl.ItemsPanel>
+                         
+                         <!-- 
+                         ItemsControl.ItemTemplate：
+                         作用：定义每个月份项的数据模板
+                         -->
+                         <ItemsControl.ItemTemplate>
+                             <DataTemplate>
+                                 <!-- 
+                                 Button：
+                                 作用：可点击的月份按钮
+                                 属性：
+                                   Classes="Ghost" - 应用"Ghost"样式类（可能是透明/幽灵按钮样式）
+                                   Margin="5,0,5,20" - 左右间距5，下间距20
+                                   Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).SelectMonthCommand}"
+                                     - 绑定到父级UserControl的DataContext（即MainViewModel）的SelectMonthCommand
+                                   CommandParameter="{Binding}" - 将当前月份数据作为命令参数传递
+                                 -->
+                                 <Button Classes="Ghost" Margin="5,0,5,20"
+                                         Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).SelectMonthCommand}"
+                                         CommandParameter="{Binding}">
+                                     <!-- 
+                                     Grid：
+                                     作用：网格布局容器，定义两行布局
+                                     属性：
+                                       RowDefinitions="Auto, Auto" - 定义两行，高度自适应内容
+                                     -->
+                                     <Grid RowDefinitions="Auto, Auto">
+                                         <!-- 
+                                         TextBlock：
+                                         作用：显示月份名称
+                                         属性：
+                                           Text="{Binding MonthName}" - 绑定到月份对象的MonthName属性
+                                           FontSize="20" - 字体大小20
+                                           FontWeight="Bold" - 字体加粗
+                                           Foreground="Black" - 黑色文字
+                                           Margin="0,0,0,5" - 下间距5
+                                           HorizontalAlignment="Left" - 左对齐
+                                           Grid.Row="0" - 位于第0行（默认，可省略）
+                                         -->
+                                         <TextBlock Text="{Binding MonthName}" 
+                                                    FontSize="20" FontWeight="Bold" 
+                                                    Foreground="Black" Margin="0,0,0,5"
+                                                    HorizontalAlignment="Left"/>
+                                         
+                                         <!-- 
+                                         ItemsControl：
+                                         作用：显示月份中的日期网格
+                                         属性：
+                                           Grid.Row="1" - 位于Grid的第1行
+                                           ItemsSource="{Binding Days}" - 绑定到月份对象的Days集合
+                                         -->
+                                         <ItemsControl Grid.Row="1" ItemsSource="{Binding Days}">
+                                             <ItemsControl.ItemsPanel>
+                                                 <ItemsPanelTemplate>
+                                                     <!-- 
+                                                     UniformGrid：
+                                                     作用：日期网格布局
+                                                     属性：
+                                                       Columns="7" - 7列（一周7天）
+                                                       Rows="6" - 6行（最多6周）
+                                                     -->
+                                                     <UniformGrid Columns="7" Rows="6"/>
+                                                 </ItemsPanelTemplate>
+                                             </ItemsControl.ItemsPanel>
+                                             <ItemsControl.ItemTemplate>
+                                                 <DataTemplate>
+                                                     <!-- 
+                                                     TextBlock：
+                                                     作用：显示日期数字
+                                                     属性：
+                                                       Classes="YearDayText" - 应用自定义样式类
+                                                       Text="{Binding DayNum}" - 绑定到日期对象的DayNum属性
+                                                       Tag="{Binding IsCurrentMonth}" - 绑定到IsCurrentMonth属性，可能用于样式触发器
+                                                       FontSize="16" - 字体大小16
+                                                     -->
+                                                     <TextBlock Classes="YearDayText" 
+                                                                Text="{Binding DayNum}" 
+                                                                Tag="{Binding IsCurrentMonth}"
+                                                                FontSize="16"/>
+                                                 </DataTemplate>
+                                             </ItemsControl.ItemTemplate>
+                                         </ItemsControl>
+                                     </Grid>
+                                 </Button>
+                             </DataTemplate>
+                         </ItemsControl.ItemTemplate>
+                     </ItemsControl>
+                 </StackPanel>
+             </DataTemplate>
+         </ListBox.ItemTemplate>
+     </ListBox>
+ </ScrollViewer>
+        </Grid>
+
+        <!-- 月视图 -->
+        <Grid RowDefinitions="50, Auto, Auto, Auto, *" 
+              IsVisible="{Binding CurrentMode, Converter={StaticResource ViewModeMatchConverter}, ConverterParameter=Month}"
+              PointerWheelChanged="OnMonthViewPointerWheelChanged">
+            
+            <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="10,0">
+                <Button Grid.Column="0" Classes="Ghost" Command="{Binding GoBackCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <PathIcon Data="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" 
+                                  Foreground="{DynamicResource PrimaryRed}" Height="20"/>
+                        <TextBlock Text="{Binding FullDateHeaderText}" 
+                                   Foreground="{DynamicResource PrimaryRed}" 
+                                   FontSize="18" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                    </StackPanel>
+                </Button>
+                
+                <TextBlock Grid.Column="1" Text="{Binding MonthHeaderText}" 
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryRed}"/>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5">
+                    <Button Classes="Ghost" Command="{Binding RecognizeWithAiCommand}" ToolTip.Tip="AI 识别">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <PathIcon Data="M13 2L3 14h7l-1 8 10-12h-7l1-8z" 
+                                      Foreground="{DynamicResource PrimaryRed}" Height="18" Width="18"/>
+                            <TextBlock Text="AI" Foreground="{DynamicResource PrimaryRed}" FontSize="14"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="Ghost" Command="{Binding ManageCalendarMembersCommand}" ToolTip.Tip="管理成员">
+                        <PathIcon Data="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" 
+                                  Foreground="{DynamicResource PrimaryRed}" Height="18" Width="18"/>
+                    </Button>
+                    <Button Classes="Ghost" Command="{Binding ToggleSearchCommand}" ToolTip.Tip="搜索">
+                        <PathIcon Data="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                                  Foreground="{DynamicResource PrimaryRed}" Height="18" Width="18"/>
+                    </Button>
+                    <Button Classes="Ghost" Command="{Binding AddTaskCommand}" ToolTip.Tip="新建任务">
+                        <TextBlock Text="+" FontSize="28" Foreground="{DynamicResource PrimaryRed}"/>
+                    </Button>
+                    <Button Classes="IconButton" Command="{Binding OpenSettingsCommand}" ToolTip.Tip="设置">
+                        <PathIcon Data="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.027 7.027 0 0 0-1.62-.94l-.36-2.54A.5.5 0 0 0 12.5 2h-3a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.55-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.1 8.16a.5.5 0 0 0 .12.64l2.03 1.58c-.05.3-.08.63-.08.95 0 .32.03.65.08.95l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.44.34.7.24l2.39-.96c.49.39 1.03.71 1.62.94l.36 2.54c.05.27.27.46.5.46h3c.25 0 .46-.19.5-.46l.36-2.54c.59-.24 1.13-.55 1.62-.94l2.39.96c.26.1.56 0 .7-.24l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM11 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"
+                                  Width="20"
+                                  Height="20"
+                                  Foreground="{DynamicResource TextGray}"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- 搜索框 -->
+            <Grid Grid.Row="1" Margin="10,0,10,10" IsVisible="{Binding IsSearchVisible}">
+                <Border Background="#F5F5F5" CornerRadius="8" Padding="10,8">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBox Grid.Column="0" 
+                                 Text="{Binding SearchText}" 
+                                 Watermark="搜索日程或任务..."
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" 
+                                Classes="Ghost" 
+                                Command="{Binding SearchCommand}"
+                                VerticalAlignment="Center"
+                                ToolTip.Tip="执行搜索">
+                            <PathIcon Data="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                                      Foreground="{DynamicResource PrimaryRed}" Height="18" Width="18"/>
+                        </Button>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- 搜索结果列表 -->
+            <Grid Grid.Row="2" IsVisible="{Binding HasSearchResults}" Margin="10,0,10,10" MaxHeight="250">
+                <Border Background="White" CornerRadius="8" BorderBrush="#E0E0E0" BorderThickness="1">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding SearchResults}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SearchResultItem">
+                                    <Button Classes="SearchResultItem"
+                                            Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).SelectSearchResultCommand}"
+                                            CommandParameter="{Binding}">
+                                        <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="Auto, *">
+                                            <!-- 类型标签 -->
+                                            <Border Grid.Row="0" Grid.Column="0" 
+                                                    Background="{Binding IsTask, Converter={x:Static cv:BoolToColorConverter.Instance}}"
+                                                    CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding TypeText}" FontSize="11" Foreground="White"/>
+                                            </Border>
+                                            <!-- 标题 -->
+                                            <TextBlock Grid.Row="0" Grid.Column="1" 
+                                                       Text="{Binding Title}" 
+                                                       FontSize="14" FontWeight="Medium"
+                                                       Foreground="{DynamicResource TextBlack}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center"/>
+                                            <!-- 时间信息 -->
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                                       Text="{Binding TimeText}" 
+                                                       FontSize="12" 
+                                                       Foreground="{DynamicResource TextGray}"
+                                                       Margin="0,4,0,0"/>
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <!-- 搜索中提示 -->
+            <Grid Grid.Row="2" IsVisible="{Binding IsSearching}" Margin="10,0,10,10">
+                <Border Background="#F5F5F5" CornerRadius="8" Padding="15">
+                    <TextBlock Text="搜索中..." HorizontalAlignment="Center" Foreground="{DynamicResource TextGray}"/>
+                </Border>
+            </Grid>
+
+            <UniformGrid Grid.Row="3" Columns="7" Margin="0,10">
+                <TextBlock Text="日" HorizontalAlignment="Center" Foreground="#8E8E93"/>
+                <TextBlock Text="一" HorizontalAlignment="Center" Foreground="#1C1C1E"/>
+                <TextBlock Text="二" HorizontalAlignment="Center" Foreground="#1C1C1E"/>
+                <TextBlock Text="三" HorizontalAlignment="Center" Foreground="#1C1C1E"/>
+                <TextBlock Text="四" HorizontalAlignment="Center" Foreground="#1C1C1E"/>
+                <TextBlock Text="五" HorizontalAlignment="Center" Foreground="#1C1C1E"/>
+                <TextBlock Text="六" HorizontalAlignment="Center" Foreground="#8E8E93"/>
+            </UniformGrid>
+
+            <ItemsControl Grid.Row="4" ItemsSource="{Binding MonthViewDays}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="7" Rows="6"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Classes="MonthCell" Tag="{Binding IsToday}"
+                                Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).SelectDateCommand}"
+                                CommandParameter="{Binding}"
+                                IsEnabled="{Binding IsCurrentMonth}">
+                            <Button.Opacity>
+                                <Binding Path="IsCurrentMonth">
+                                    <Binding.Converter>
+                                        <cv:BoolToOpacityConverter OpacityTrue="1" OpacityFalse="0.3"/>
+                                    </Binding.Converter>
+                                </Binding>
+                            </Button.Opacity>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+
+        <!-- 日视图 -->
+        <Grid RowDefinitions="50, *" IsVisible="{Binding CurrentMode, Converter={StaticResource ViewModeMatchConverter}, ConverterParameter=Day}">
+            <Grid Grid.Row="0" Background="#F5F5F5" ColumnDefinitions="Auto, *, Auto" Margin="10,0">
+                <Button Grid.Column="0" Classes="Ghost" Command="{Binding GoBackCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&lt; 返回月视图" Foreground="{DynamicResource PrimaryRed}" FontSize="16"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="2" Classes="IconButton" Command="{Binding OpenSettingsCommand}" ToolTip.Tip="设置">
+                    <PathIcon Data="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.027 7.027 0 0 0-1.62-.94l-.36-2.54A.5.5 0 0 0 12.5 2h-3a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.55-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.1 8.16a.5.5 0 0 0 .12.64l2.03 1.58c-.05.3-.08.63-.08.95 0 .32.03.65.08.95l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.44.34.7.24l2.39-.96c.49.39 1.03.71 1.62.94l.36 2.54c.05.27.27.46.5.46h3c.25 0 .46-.19.5-.46l.36-2.54c.59-.24 1.13-.55 1.62-.94l2.39.96c.26.1.56 0 .7-.24l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM11 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"
+                              Width="20"
+                              Height="20"
+                              Foreground="{DynamicResource TextGray}"/>
+                </Button>
+            </Grid>
+            <TextBlock Grid.Row="1" Text="这里是日程详情界面" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
+
+    </Grid>
+</UserControl>

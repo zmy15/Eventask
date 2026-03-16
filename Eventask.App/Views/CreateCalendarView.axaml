@@ -1,0 +1,91 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Eventask.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="500"
+             x:DataType="vm:CreateCalendarViewModel"
+             x:Class="Eventask.App.Views.CreateCalendarView">
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="PrimaryRed">#FF3B30</SolidColorBrush>
+        <SolidColorBrush x:Key="TextBlack">#1C1C1E</SolidColorBrush>
+        <SolidColorBrush x:Key="TextGray">#8E8E93</SolidColorBrush>
+        <SolidColorBrush x:Key="BackgroundGray">#F5F5F5</SolidColorBrush>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="60, *, Auto" Background="White">
+        <!-- 标题栏 -->
+        <Border Grid.Row="0" Background="{StaticResource BackgroundGray}" Padding="20,0">
+            <TextBlock Text="新建日历" 
+                       FontSize="24" 
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"
+                       Foreground="{StaticResource TextBlack}"/>
+        </Border>
+
+        <!-- 内容区 -->
+        <StackPanel Grid.Row="1" Margin="20,30" Spacing="20">
+            <!-- 错误提示 -->
+            <Border Background="#FFEBEE" 
+                    CornerRadius="8" 
+                    Padding="15"
+                    IsVisible="{Binding HasError}">
+                <TextBlock Text="{Binding ErrorMessage}" 
+                           Foreground="#C62828"
+                           TextWrapping="Wrap"/>
+            </Border>
+
+            <!-- 日历名称输入 -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="日历名称" 
+                           FontSize="16" 
+                           FontWeight="Medium"
+                           Foreground="{StaticResource TextBlack}"/>
+                <TextBox Text="{Binding CalendarName}" 
+                         Watermark="请输入日历名称"
+                         FontSize="16"
+                         Padding="12,10"
+                         BorderBrush="{StaticResource TextGray}"
+                         BorderThickness="1"
+                         CornerRadius="8"/>
+            </StackPanel>
+
+            <!-- 加载指示器 -->
+            <ProgressBar IsIndeterminate="True" 
+                         IsVisible="{Binding IsLoading}"
+                         Margin="0,20,0,0"/>
+        </StackPanel>
+
+        <!-- 按钮区 -->
+        <Grid Grid.Row="2" 
+              ColumnDefinitions="*, *" 
+              Margin="20,0,20,20" 
+              ColumnSpacing="10">
+            <Button Grid.Column="0" 
+                    Content="取消"
+                    Command="{Binding CancelCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Height="44"
+                    FontSize="16"
+                    Background="Transparent"
+                    BorderBrush="{StaticResource TextGray}"
+                    BorderThickness="1"
+                    CornerRadius="8"/>
+            <Button Grid.Column="1" 
+                    Content="创建"
+                    Command="{Binding CreateCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Height="44"
+                    FontSize="16"
+                    Background="{StaticResource PrimaryRed}"
+                    Foreground="White"
+                    BorderThickness="0"
+                    CornerRadius="8"/>
+        </Grid>
+    </Grid>
+</UserControl>

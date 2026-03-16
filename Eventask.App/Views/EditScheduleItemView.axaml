@@ -1,0 +1,273 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Eventask.App.ViewModels"
+             xmlns:cv="clr-namespace:Eventask.App.Converters"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="1200"
+             x:DataType="vm:EditScheduleItemViewModel"
+             x:Class="Eventask.App.Views.EditScheduleItemView">
+
+	<UserControl.Resources>
+		<cv:BoolToColorConverter x:Key="BoolToColorConverter"/>
+		<SolidColorBrush x:Key="PrimaryRed">#FF3B30</SolidColorBrush>
+		<SolidColorBrush x:Key="TextBlack">#1C1C1E</SolidColorBrush>
+		<SolidColorBrush x:Key="TextGray">#8E8E93</SolidColorBrush>
+		<SolidColorBrush x:Key="BackgroundGray">#F5F5F5</SolidColorBrush>
+	</UserControl.Resources>
+
+	<UserControl.Styles>
+		<Style Selector="Button.Ghost">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="Padding" Value="0"/>
+		</Style>
+
+		<Style Selector="TextBlock.Label">
+			<Setter Property="FontSize" Value="14"/>
+			<Setter Property="Foreground" Value="{DynamicResource TextGray}"/>
+			<Setter Property="Margin" Value="0,0,0,5"/>
+		</Style>
+
+		<Style Selector="TextBox">
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="BorderBrush" Value="#E5E5EA"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="Padding" Value="12"/>
+		</Style>
+
+		<Style Selector="Button.TypeButton">
+			<Setter Property="Padding" Value="20,10"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="FontSize" Value="14"/>
+			<Setter Property="FontWeight" Value="SemiBold"/>
+		</Style>
+
+		<Style Selector="Button.TypeButton:disabled">
+			<Setter Property="Opacity" Value="1"/>
+		</Style>
+	</UserControl.Styles>
+
+	<Grid RowDefinitions="60, *, Auto">
+		<!-- 顶部导航栏 -->
+		<Grid Grid.Row="0" Background="{DynamicResource BackgroundGray}" ColumnDefinitions="Auto, *, Auto">
+			<Button Grid.Column="0" Classes="Ghost" Command="{Binding GoBackCommand}" 
+					Margin="15,0" VerticalAlignment="Center">
+				<StackPanel Orientation="Horizontal" Spacing="5">
+					<PathIcon Data="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" 
+							  Foreground="{DynamicResource PrimaryRed}" Height="20" Width="20"/>
+					<TextBlock Text="取消" Foreground="{DynamicResource PrimaryRed}" 
+							   FontSize="16" VerticalAlignment="Center"/>
+				</StackPanel>
+			</Button>
+
+			<TextBlock Grid.Column="1" Text="{Binding PageTitle}" 
+					   HorizontalAlignment="Center" VerticalAlignment="Center"
+					   FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextBlack}"/>
+
+			<Button Grid.Column="2" Content="保存" 
+					Command="{Binding SaveCommand}"
+					Background="{DynamicResource PrimaryRed}" 
+					Foreground="White"
+					Padding="20,8" Margin="15,0" 
+					CornerRadius="8" FontSize="14"/>
+		</Grid>
+
+		<!-- 表单内容 -->
+		<ScrollViewer Grid.Row="1">
+			<StackPanel Margin="20" Spacing="20">
+				
+				<!-- 错误提示 -->
+				<Border Background="#FFEBEE" CornerRadius="8" Padding="12"
+						IsVisible="{Binding ErrorMessage, Converter={x:Static ObjectConverters.IsNotNull}}">
+					<TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap"/>
+				</Border>
+
+				<!-- 类型选择器 (仅在新建模式显示) -->
+				<StackPanel IsVisible="{Binding IsCreateMode}" Spacing="10">
+					<TextBlock Classes="Label" Text="类型"/>
+					<Grid ColumnDefinitions="Auto, 12, Auto">
+						<Button Grid.Column="0" Classes="TypeButton"
+								Content="日程"
+								Command="{Binding SwitchToEventCommand}">
+							<Button.Background>
+								<SolidColorBrush Color="{Binding IsEventType, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#FF3B30|#E5E5EA'}"/>
+							</Button.Background>
+							<Button.Foreground>
+								<SolidColorBrush Color="{Binding IsEventType, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White|#1C1C1E'}"/>
+							</Button.Foreground>
+						</Button>
+						<Button Grid.Column="2" Classes="TypeButton"
+								Content="任务"
+								Command="{Binding SwitchToTaskCommand}">
+							<Button.Background>
+								<SolidColorBrush Color="{Binding IsTaskType, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#FF3B30|#E5E5EA'}"/>
+							</Button.Background>
+							<Button.Foreground>
+								<SolidColorBrush Color="{Binding IsTaskType, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White|#1C1C1E'}"/>
+							</Button.Foreground>
+						</Button>
+					</Grid>
+				</StackPanel>
+
+				<!-- 标题 -->
+				<StackPanel>
+					<TextBlock Classes="Label" Text="标题 *"/>
+					<TextBox Text="{Binding Title}" Watermark="请输入标题"/>
+				</StackPanel>
+
+				<!-- 日程:开始时间 -->
+				<StackPanel IsVisible="{Binding IsEventType}">
+					<TextBlock Classes="Label" Text="开始时间"/>
+					<Grid ColumnDefinitions="Auto, 10, *">
+						<CalendarDatePicker Grid.Column="0" SelectedDate="{Binding StartDate}"/>
+						<TimePicker Grid.Column="2" SelectedTime="{Binding StartTime}"/>
+					</Grid>
+				</StackPanel>
+
+				<!-- 日程:结束时间 -->
+				<StackPanel IsVisible="{Binding IsEventType}">
+					<TextBlock Classes="Label" Text="结束时间"/>
+					<Grid ColumnDefinitions="Auto, 10, *">
+						<CalendarDatePicker Grid.Column="0" SelectedDate="{Binding EndDate}"/>
+						<TimePicker Grid.Column="2" SelectedTime="{Binding EndTime}"/>
+					</Grid>
+				</StackPanel>
+
+				<!-- 日程:全天 -->
+				<CheckBox IsVisible="{Binding IsEventType}" IsChecked="{Binding AllDay}" Content="全天事件"/>
+
+				<!-- 任务:截止时间 -->
+				<StackPanel IsVisible="{Binding IsTaskType}">
+					<TextBlock Classes="Label" Text="截止时间(可选)"/>
+					<Grid ColumnDefinitions="Auto, 10, *">
+						<CalendarDatePicker Grid.Column="0" SelectedDate="{Binding DueDate}"/>
+						<TimePicker Grid.Column="2" SelectedTime="{Binding DueTime}" 
+									IsEnabled="{Binding DueDate, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+					</Grid>
+				</StackPanel>
+
+				<!-- 任务:完成状态 -->
+				<CheckBox IsVisible="{Binding IsTaskType}" 
+						  IsChecked="{Binding IsCompleted}" 
+						  Content="已完成"
+						  FontSize="16"
+						  FontWeight="SemiBold"/>
+
+				<!-- 地点 -->
+				<StackPanel>
+					<TextBlock Classes="Label" Text="地点(可选)"/>
+					<TextBox Text="{Binding Location}" Watermark="请输入地点"/>
+				</StackPanel>
+
+				<!-- 描述 -->
+				<StackPanel>
+					<TextBlock Classes="Label" Text="描述(可选)"/>
+					<TextBox Text="{Binding Description}" 
+							 Watermark="请输入描述"
+							 AcceptsReturn="True"
+							 TextWrapping="Wrap"
+							 MinHeight="100"/>
+				</StackPanel>
+
+				<!-- 提醒设置 (仅日程显示) -->
+				<StackPanel IsVisible="{Binding IsEventType}" Margin="0,15,0,0">
+					<TextBlock Text="提醒" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+					
+					<Button Content="+ 添加提醒" 
+							Command="{Binding AddReminderCommand}"
+							Margin="0,0,0,10"/>
+					
+					<ItemsControl ItemsSource="{Binding Reminders}">
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>
+								<Border Background="#F5F5F5" CornerRadius="4" Padding="10" Margin="0,0,0,5">
+									<Grid ColumnDefinitions="*,Auto">
+										<!-- 提醒时间文本 -->
+										<TextBlock Grid.Column="0" 
+												   Text="{Binding DisplayText}" 
+												   VerticalAlignment="Center"
+												   FontWeight="SemiBold"/>
+										
+										<!-- 删除按钮 -->
+										<Button Grid.Column="1" Content="删除" 
+												Command="{Binding $parent[ItemsControl].((vm:EditScheduleItemViewModel)DataContext).RemoveReminderCommand}"
+												CommandParameter="{Binding}"/>
+									</Grid>
+								</Border>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+				</StackPanel>
+
+				<!-- 批量导入 JSON -->
+				<StackPanel Margin="0,15,0,0">
+					<TextBlock Text="批量导入" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+					<Button Content="导入 JSON (可粘贴或从文件加载)"
+							Command="{Binding ImportFromJsonCommand}"
+							HorizontalAlignment="Stretch"
+							Padding="10"
+							Background="{DynamicResource BackgroundGray}"/>
+					<TextBlock Text="支持名称、描述、地点、时间段。" Foreground="#666" FontSize="12" Margin="0,4,0,0"/>
+				</StackPanel>
+
+				<!-- 附件区域 -->
+				<StackPanel Margin="0,15,0,0">
+					<TextBlock Text="附件" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+					
+					<Button Content="+ 添加附件" 
+							Command="{Binding AddAttachmentCommand}"
+							IsEnabled="{Binding !IsUploadingAttachment}"
+							Margin="0,0,0,10"/>
+					
+					<ItemsControl ItemsSource="{Binding Attachments}">
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>
+								<Border Background="#F5F5F5" CornerRadius="4" Padding="10" Margin="0,0,0,5">
+									<Grid ColumnDefinitions="Auto,*,Auto,Auto">
+										<!-- 文件图标 -->
+										<PathIcon Grid.Column="0" 
+												  Data="M6 2c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z"
+												  Width="20" Height="20" Margin="0,0,10,0"/>
+					
+										<!-- 文件信息 -->
+										<StackPanel Grid.Column="1" VerticalAlignment="Center">
+											<TextBlock Text="{Binding FileName}" FontWeight="SemiBold"/>
+											<TextBlock Text="{Binding DisplaySize}" FontSize="12" Foreground="#666"/>
+										</StackPanel>
+					
+										<!-- 打开按钮 -->
+										<Button Grid.Column="2" Content="打开" 
+												Command="{Binding $parent[ItemsControl].((vm:EditScheduleItemViewModel)DataContext).OpenAttachmentCommand}"
+												CommandParameter="{Binding}"
+												Margin="5,0"/>
+					
+										<!-- 删除按钮 -->
+										<Button Grid.Column="3" Content="删除" 
+												Command="{Binding $parent[ItemsControl].((vm:EditScheduleItemViewModel)DataContext).RemoveAttachmentCommand}"
+												CommandParameter="{Binding}"/>
+									</Grid>
+								</Border>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+					
+					<!-- 上传中提示 -->
+					<TextBlock IsVisible="{Binding IsUploadingAttachment}" 
+							   Text="正在上传附件..." 
+							   Foreground="#007AFF"/>
+				</StackPanel>
+
+			</StackPanel>
+		</ScrollViewer>
+
+		<!-- 加载指示器 -->
+		<Grid Grid.Row="0" Grid.RowSpan="3" 
+			  Background="#80000000" 
+			  IsVisible="{Binding IsLoading}">
+			<ProgressBar IsIndeterminate="True" Width="200"/>
+		</Grid>
+	</Grid>
+</UserControl>

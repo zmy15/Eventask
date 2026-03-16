@@ -1,0 +1,209 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Eventask.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="600"
+             x:DataType="vm:SelectCalendarViewModel"
+             x:Class="Eventask.App.Views.SelectCalendarView">
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="PrimaryRed">#FF3B30</SolidColorBrush>
+        <SolidColorBrush x:Key="TextBlack">#1C1C1E</SolidColorBrush>
+        <SolidColorBrush x:Key="TextGray">#8E8E93</SolidColorBrush>
+        <SolidColorBrush x:Key="BackgroundGray">#F5F5F5</SolidColorBrush>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.IconButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Button.IconButton:pointerover">
+            <Setter Property="Background" Value="#F0F0F0"/>
+        </Style>
+
+        <Style Selector="Button.IconButton:disabled">
+            <Setter Property="Opacity" Value="0.3"/>
+        </Style>
+        
+        <Style Selector="Border.CalendarItem">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="15"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        
+        <Style Selector="Border.CalendarItem[Tag=True]">
+            <Setter Property="Background" Value="#FFEBEE"/>
+            <Setter Property="BorderBrush" Value="{StaticResource PrimaryRed}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="60, *, Auto" Background="White">
+        <!-- 标题栏 -->
+        <Border Grid.Row="0" Background="{StaticResource BackgroundGray}" Padding="20,0">
+            <TextBlock Text="选择日历" 
+                       FontSize="24" 
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"
+                       Foreground="{StaticResource TextBlack}"/>
+        </Border>
+
+        <!-- 内容区 -->
+        <ScrollViewer Grid.Row="1" Margin="20,20">
+            <StackPanel Spacing="10">
+                <!-- 错误提示 -->
+                <Border Background="#FFEBEE" 
+                        CornerRadius="8" 
+                        Padding="15"
+                        Margin="0,0,0,10"
+                        IsVisible="{Binding HasError}">
+                    <TextBlock Text="{Binding ErrorMessage}" 
+                               Foreground="#C62828"
+                               TextWrapping="Wrap"/>
+                </Border>
+
+                <!-- 加载指示器 -->
+                <StackPanel IsVisible="{Binding IsLoading}" 
+                            HorizontalAlignment="Center"
+                            Margin="0,50,0,0"
+                            Spacing="15">
+                    <ProgressBar IsIndeterminate="True" Width="200"/>
+                    <TextBlock Text="加载中..." 
+                               HorizontalAlignment="Center"
+                               Foreground="{StaticResource TextGray}"/>
+                </StackPanel>
+
+                <!-- 日历列表 -->
+                <ItemsControl ItemsSource="{Binding Calendars}"
+                              IsVisible="{Binding !IsLoading}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <!-- 使用 Tapped 事件代替嵌套 Button -->
+                            <Border Classes="CalendarItem" 
+                                    Tag="{Binding IsSelected}"
+                                    Tapped="OnCalendarItemTapped">
+                                <Grid ColumnDefinitions="*, Auto, Auto">
+                                    <!-- 日历信息区域 -->
+                                    <StackPanel Grid.Column="0" Spacing="5">
+                                        <TextBlock Text="{Binding Name}" 
+                                                   FontSize="18" 
+                                                   FontWeight="Medium"
+                                                   Foreground="{StaticResource TextBlack}"/>
+                                        <TextBlock Text="{Binding UpdatedAt, StringFormat='更新于 {0:yyyy-MM-dd HH:mm}'}" 
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource TextGray}"/>
+                                    </StackPanel>
+
+                                    <!-- 选中标记 -->
+                                    <PathIcon Grid.Column="1" 
+                                              Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                                              Foreground="{StaticResource PrimaryRed}"
+                                              Width="24"
+                                              Height="24"
+                                              VerticalAlignment="Center"
+                                              Margin="8,0"
+                                              IsVisible="{Binding IsSelected}"/>
+
+                                    <!-- 删除按钮 -->
+                                    <Button Grid.Column="2"
+                                            Classes="IconButton"
+                                            Command="{Binding $parent[UserControl].((vm:SelectCalendarViewModel)DataContext).DeleteCalendarCommand}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip.Tip="删除日历"
+                                            IsEnabled="{Binding $parent[UserControl].((vm:SelectCalendarViewModel)DataContext).IsLastCalendar, Converter={x:Static BoolConverters.Not}}"
+                                            VerticalAlignment="Center"
+                                            Click="OnDeleteButtonClick">
+                                        <!-- 垃圾桶图标 -->
+                                        <PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                                                  Width="20"
+                                                  Height="20"
+                                                  Foreground="{StaticResource TextGray}"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- 空状态 -->
+                <StackPanel Spacing="10" 
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Center" 
+                            Margin="0,50,0,0">
+                    <StackPanel.IsVisible>
+                        <Binding Path="Calendars.Count" Converter="{x:Static ObjectConverters.Equal}" ConverterParameter="0"/>
+                    </StackPanel.IsVisible>
+                    
+                    <TextBlock Text="暂无日历" 
+                               FontSize="18"
+                               Foreground="{StaticResource TextGray}"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="请先创建一个日历" 
+                               FontSize="14"
+                               Foreground="{StaticResource TextGray}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- 最后一个日历提示 -->
+                <Border Background="#FFF8E1" 
+                        CornerRadius="8" 
+                        Padding="15"
+                        Margin="0,10,0,0"
+                        IsVisible="{Binding IsLastCalendar}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <PathIcon Data="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"
+                                  Width="20"
+                                  Height="20"
+                                  Foreground="#F57F17"
+                                  VerticalAlignment="Center"/>
+                        <TextBlock Text="这是最后一个日历,无法删除" 
+                                   Foreground="#F57F17"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 按钮区 -->
+        <Grid Grid.Row="2" 
+              ColumnDefinitions="*, *" 
+              Margin="20,0,20,20" 
+              ColumnSpacing="10">
+            <Button Grid.Column="0" 
+                    Content="取消"
+                    Command="{Binding CancelCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Height="44"
+                    FontSize="16"
+                    Background="Transparent"
+                    BorderBrush="{StaticResource TextGray}"
+                    BorderThickness="1"
+                    CornerRadius="8"/>
+            <Button Grid.Column="1" 
+                    Content="确认"
+                    Command="{Binding ConfirmCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Height="44"
+                    FontSize="16"
+                    Background="{StaticResource PrimaryRed}"
+                    Foreground="White"
+                    BorderThickness="0"
+                    CornerRadius="8"/>
+        </Grid>
+    </Grid>
+</UserControl>

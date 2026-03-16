@@ -1,0 +1,99 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Eventask.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="550"
+             x:Class="Eventask.App.Views.RegisterView"
+             x:DataType="vm:RegisterViewModel">
+    <Design.DataContext>
+        <vm:RegisterViewModel />
+    </Design.DataContext>
+
+    <Border Padding="40" Background="#F5F5F5">
+        <StackPanel Spacing="20" VerticalAlignment="Center" MaxWidth="350">
+            <!-- Logo/Title -->
+            <TextBlock Text="Eventask" 
+                       FontSize="32" 
+                       FontWeight="Bold" 
+                       HorizontalAlignment="Center"
+                       Foreground="#333333"
+                       Margin="0,0,0,20"/>
+
+            <!-- Register Form -->
+            <Border Background="White" 
+                    CornerRadius="8" 
+                    Padding="30" 
+                    BoxShadow="0 2 8 0 #10000000">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="注册" 
+                               FontSize="24" 
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,10"/>
+
+                    <!-- Username -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="用户名" FontWeight="Medium"/>
+                        <TextBox Text="{Binding Username}"
+                                 Watermark="请输入用户名"
+                                 Padding="10,8"/>
+                    </StackPanel>
+
+                    <!-- Password -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="密码" FontWeight="Medium"/>
+                        <TextBox Text="{Binding Password}"
+                                 PasswordChar="●"
+                                 Watermark="至少6个字符"
+                                 Padding="10,8"/>
+                    </StackPanel>
+
+                    <!-- Confirm Password -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="确认密码" FontWeight="Medium"/>
+                        <TextBox Text="{Binding ConfirmPassword}"
+                                 PasswordChar="●"
+                                 Watermark="再次输入密码"
+                                 Padding="10,8"/>
+                    </StackPanel>
+
+                    <!-- Error Message -->
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="Red"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding HasError}"/>
+
+                    <!-- Register Button -->
+                    <Button Content="注册"
+                            Command="{Binding RegisterCommand}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            Padding="0,12"
+                            FontSize="16"
+                            FontWeight="Medium"
+                            Background="#007ACC"
+                            Foreground="White"
+                            CornerRadius="4"
+                            Margin="0,10,0,0"/>
+
+                    <!-- Back to Login Link -->
+                    <StackPanel Orientation="Horizontal" 
+                                HorizontalAlignment="Center"
+                                Spacing="5"
+                                Margin="0,10,0,0">
+                        <TextBlock Text="已有账户？" 
+                                   Foreground="#666666"/>
+                        <Button Content="返回登录"
+                                Command="{Binding NavigateToLoginCommand}"
+                                Background="Transparent"
+                                Foreground="#007ACC"
+                                Padding="0"
+                                BorderThickness="0"
+                                Cursor="Hand"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Border>
+</UserControl>

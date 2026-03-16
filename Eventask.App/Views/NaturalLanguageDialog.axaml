@@ -1,0 +1,135 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:Eventask.App.ViewModels"
+        xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+        x:Class="Eventask.App.Views.NaturalLanguageDialog"
+        x:DataType="vm:NaturalLanguageDialogViewModel"
+        Width="520" Height="720"
+        Title="AI 日程识别"
+        WindowStartupLocation="CenterOwner"
+        mc:Ignorable="d">
+
+    <Design.DataContext>
+        <vm:NaturalLanguageDialogViewModel />
+    </Design.DataContext>
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="PrimaryRed">#FF3B30</SolidColorBrush>
+        <SolidColorBrush x:Key="TextBlack">#1C1C1E</SolidColorBrush>
+        <SolidColorBrush x:Key="TextGray">#8E8E93</SolidColorBrush>
+        <SolidColorBrush x:Key="BackgroundGray">#F5F5F5</SolidColorBrush>
+        <generic:List x:Key="ScheduleTypes" x:TypeArguments="vm:ScheduleItemType">
+            <vm:ScheduleItemType>Event</vm:ScheduleItemType>
+            <vm:ScheduleItemType>Task</vm:ScheduleItemType>
+        </generic:List>
+    </Window.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Background="White">
+        <!-- 输入区域 -->
+        <StackPanel Grid.Row="0" Margin="20" Spacing="10">
+            <TextBlock Text="用自然语言描述日程" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextBlack}" />
+            <TextBlock Text="示例: 明天下午两点到四点开项目评审会,晚上 8 点前提交周报" Foreground="{DynamicResource TextGray}" FontSize="12" />
+            <TextBox Text="{Binding PromptText}" AcceptsReturn="True" MinHeight="120" MaxHeight="200"
+                     TextWrapping="Wrap"
+                     Watermark="请输入日程描述" />
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Content="开始识别" Command="{Binding ParseCommand}" IsEnabled="{Binding !IsParsing}"
+                        Background="{DynamicResource PrimaryRed}" Foreground="White" Padding="16,8" CornerRadius="8" />
+                <Button Content="添加空白草稿" Command="{Binding AddBlankDraftCommand}" Padding="14,8" />
+            </StackPanel>
+            <Border Background="#FFEBEE" CornerRadius="6" Padding="8"
+                    IsVisible="{Binding ErrorMessage, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap" />
+            </Border>
+        </StackPanel>
+
+        <!-- 结果列表 -->
+        <ScrollViewer Grid.Row="1" Margin="20,0,20,20">
+            <StackPanel Spacing="12">
+                <ItemsControl ItemsSource="{Binding Drafts}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource BackgroundGray}" CornerRadius="10" Padding="12"
+                                    Margin="0,0,0,8">
+                                <StackPanel Spacing="8">
+                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                        <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding Title}" FontSize="16"
+                                                 FontWeight="SemiBold"
+                                                 Watermark="标题" />
+                                        <Button Grid.Row="0" Grid.Column="1" Content="删除"
+                                                Command="{Binding $parent[ItemsControl].((vm:NaturalLanguageDialogViewModel)DataContext).RemoveDraftCommand}"
+                                                CommandParameter="{Binding}" />
+                                        <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Spacing="10"
+                                                    Margin="0,6,0,0">
+                                            <ComboBox ItemsSource="{StaticResource ScheduleTypes}"
+                                                      SelectedItem="{Binding ItemType}" Width="120" />
+                                            <TextBlock Text="{Binding ItemType, StringFormat=类型: {0}}"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource TextGray}" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <TextBox Text="{Binding Description}" Watermark="描述(可选)" AcceptsReturn="True"
+                                             TextWrapping="Wrap" MinHeight="60" />
+                                    <TextBox Text="{Binding Location}" Watermark="地点(可选)" />
+
+                                    <!-- 日程时间 -->
+                                    <StackPanel Spacing="6" IsVisible="{Binding IsEvent}">
+                                        <TextBlock Text="开始" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextGray}" />
+                                        <Grid ColumnDefinitions="Auto,10,*">
+                                            <DatePicker Grid.Column="0" SelectedDate="{Binding StartDate}" />
+                                            <TimePicker Grid.Column="2" SelectedTime="{Binding StartTime}" />
+                                        </Grid>
+                                        <TextBlock Text="结束" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextGray}" />
+                                        <Grid ColumnDefinitions="Auto,10,*">
+                                            <DatePicker Grid.Column="0" SelectedDate="{Binding EndDate}" />
+                                            <TimePicker Grid.Column="2" SelectedTime="{Binding EndTime}" />
+                                        </Grid>
+                                        <CheckBox IsChecked="{Binding AllDay}" Content="全天" />
+                                    </StackPanel>
+
+                                    <!-- 任务截止 -->
+                                    <StackPanel Spacing="6" IsVisible="{Binding IsTask}">
+                                        <TextBlock Text="截止" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextGray}" />
+                                        <Grid ColumnDefinitions="Auto,10,*">
+                                            <DatePicker Grid.Column="0" SelectedDate="{Binding DueDate}" />
+                                            <TimePicker Grid.Column="2" SelectedTime="{Binding DueTime}" />
+                                        </Grid>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="还没有识别结果" HorizontalAlignment="Center" Margin="0,20,0,0"
+                           Foreground="{DynamicResource TextGray}"
+                           IsVisible="{Binding Drafts.Count, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=0}" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 底部操作 -->
+        <Border Grid.Row="2" Background="#F9F9F9" Padding="16">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                <TextBlock Grid.Column="0" Text="识别多个结果时可逐个修改或删除" Foreground="{DynamicResource TextGray}"
+                           VerticalAlignment="Center" />
+                <Button Grid.Column="1" Content="取消" Padding="16,8" Click="OnCancel" />
+                <Button Grid.Column="2" Content="应用" Padding="16,8" Background="{DynamicResource PrimaryRed}"
+                        Foreground="White"
+                        IsEnabled="{Binding CanApply}" Click="OnApply" />
+            </Grid>
+        </Border>
+
+        <!-- 加载遮罩 -->
+        <Grid Grid.RowSpan="3" Background="#66000000" IsVisible="{Binding IsParsing}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                <ProgressBar IsIndeterminate="True" Width="220" />
+                <TextBlock Text="AI 正在识别，请稍候…" Foreground="White" HorizontalAlignment="Center" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

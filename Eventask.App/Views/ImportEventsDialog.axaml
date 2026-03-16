@@ -1,0 +1,32 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Eventask.App.Views.ImportEventsDialog"
+        Title="导入事件 JSON"
+        Width="700" Height="520"
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light"
+        CanResize="True">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="18">
+        <Grid ColumnDefinitions="Auto *" Margin="8">
+
+        <StackPanel Orientation="Horizontal" Spacing="8" Grid.Row="0">
+            <TextBlock Text="粘贴或加载自定义 JSON" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" />
+            <TextBlock Text="" Foreground="#666" VerticalAlignment="Center" FontSize="12" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8" Grid.Row="0">
+            <Button Content="从文件加载" Margin="10,0,0,0" Click="OnLoadFileClicked" />
+            <Button Content="填充示例" Click="OnFillSampleClicked" />
+        </StackPanel>
+        </Grid>
+
+        <TextBox x:Name="JsonInputBox"
+                 Grid.Row="1"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap" />
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,12,0,0">
+            <Button Grid.Column="0" Content="取消" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Click="OnCancelClicked" />
+            <Button Grid.Column="1" Content="导入" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Click="OnImportClicked" Classes="accent" />
+        </Grid>
+    </Grid>
+</Window>

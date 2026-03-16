@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/Client/">
+    <Project Path="Eventask.Android/Eventask.Android.csproj">
+      <Deploy />
+    </Project>
+    <Project Path="Eventask.App/Eventask.App.csproj" />
+    <Project Path="Eventask.App.Tests/Eventask.App.Tests.csproj">
+      <Build Solution="Release|*" Project="false" />
+    </Project>
+    <Project Path="Eventask.Desktop/Eventask.Desktop.csproj" />
+  </Folder>
+  <Folder Name="/WebAPI/">
+    <Project Path="Eventask.ApiService.MigrationWorker/Eventask.ApiService.MigrationWorker.csproj" />
+    <Project Path="Eventask.ApiService/Eventask.ApiService.csproj" />
+    <Project Path="Eventask.ApiService.Tests/Eventask.ApiService.Tests.csproj">
+      <Build Solution="Release|*" Project="false" />
+    </Project>
+  </Folder>
+  <Project Path="Eventask.AppHost/Eventask.AppHost.csproj" />
+  <Project Path="Eventask.Domain/Eventask.Domain.csproj" />
+  <Project Path="Eventask.Domain.Tests/Eventask.Domain.Tests.csproj" />
+</Solution>

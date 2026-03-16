@@ -1,0 +1,90 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Eventask.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="500"
+             x:Class="Eventask.App.Views.LoginView"
+             x:DataType="vm:LoginViewModel">
+    <Design.DataContext>
+        <vm:LoginViewModel />
+    </Design.DataContext>
+
+    <Border Padding="40" Background="#F5F5F5">
+        <StackPanel Spacing="20" VerticalAlignment="Center" MaxWidth="350">
+            <!-- Logo/Title -->
+            <TextBlock Text="Eventask" 
+                       FontSize="32" 
+                       FontWeight="Bold" 
+                       HorizontalAlignment="Center"
+                       Foreground="#333333"
+                       Margin="0,0,0,20"/>
+
+            <!-- Login Form -->
+            <Border Background="White" 
+                    CornerRadius="8" 
+                    Padding="30" 
+                    BoxShadow="0 2 8 0 #10000000">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="登录" 
+                               FontSize="24" 
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,10"/>
+
+                    <!-- Username -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="用户名" FontWeight="Medium"/>
+                        <TextBox Text="{Binding Username}"
+                                 Watermark="请输入用户名"
+                                 Padding="10,8"/>
+                    </StackPanel>
+
+                    <!-- Password -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="密码" FontWeight="Medium"/>
+                        <TextBox Text="{Binding Password}"
+                                 PasswordChar="●"
+                                 Watermark="请输入密码"
+                                 Padding="10,8"/>
+                    </StackPanel>
+
+                    <!-- Error Message -->
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="Red"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding HasError}"/>
+
+                    <!-- Login Button -->
+                    <Button Content="登录"
+                            Command="{Binding LoginCommand}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            Padding="0,12"
+                            FontSize="16"
+                            FontWeight="Medium"
+                            Background="#007ACC"
+                            Foreground="White"
+                            CornerRadius="4"
+                            Margin="0,10,0,0"/>
+
+                    <!-- Register Link -->
+                    <StackPanel Orientation="Horizontal" 
+                                HorizontalAlignment="Center"
+                                Spacing="5"
+                                Margin="0,10,0,0">
+                        <TextBlock Text="还没有账户？" 
+                                   Foreground="#666666"/>
+                        <Button Content="立即注册"
+                                Command="{Binding NavigateToRegisterCommand}"
+                                Background="Transparent"
+                                Foreground="#007ACC"
+                                Padding="0"
+                                BorderThickness="0"
+                                Cursor="Hand"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -1,0 +1,28 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Eventask.App.ViewModels.SelectReminderDialog"
+        Title="选择提醒时间"
+        Width="350" Height="400"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+	
+	<Grid RowDefinitions="*, Auto" Margin="20">
+		<ListBox Grid.Row="0" x:Name="ReminderList" SelectionMode="Single">
+			<ListBoxItem Tag="0">事件开始时</ListBoxItem>
+			<ListBoxItem Tag="5">提前 5 分钟</ListBoxItem>
+			<ListBoxItem Tag="10">提前 10 分钟</ListBoxItem>
+			<ListBoxItem Tag="15">提前 15 分钟</ListBoxItem>
+			<ListBoxItem Tag="30">提前 30 分钟</ListBoxItem>
+			<ListBoxItem Tag="60">提前 1 小时</ListBoxItem>
+			<ListBoxItem Tag="120">提前 2 小时</ListBoxItem>
+			<ListBoxItem Tag="1440">提前 1 天</ListBoxItem>
+			<ListBoxItem Tag="2880">提前 2 天</ListBoxItem>
+			<ListBoxItem Tag="10080">提前 1 周</ListBoxItem>
+		</ListBox>
+
+		<Grid Grid.Row="1" ColumnDefinitions="*, *" Margin="0,20,0,0" ColumnSpacing="10">
+			<Button Grid.Column="0" Content="取消" Click="OnCancel"/>
+			<Button Grid.Column="1" Content="确定" Click="OnConfirm" Classes="accent"/>
+		</Grid>
+	</Grid>
+</Window>
