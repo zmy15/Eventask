@@ -1,4 +1,4 @@
-using Eventask.Domain.Entity.Calendars;
+﻿using Eventask.Domain.Entity.Calendars;
 using FluentAssertions;
 
 namespace Eventask.Domain.Tests.Entity.Calendars;
@@ -113,7 +113,7 @@ public class CalendarTests
         var ownerId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var calendar = Calendar.Create(ownerId, "Test Calendar");
-        var member = calendar.AddMember(userId, CalendarMemberRole.Editor, ownerId);
+        var (member, _) = calendar.AddMember(userId, CalendarMemberRole.Editor, ownerId);
         member.MarkDeleted(DateTimeOffset.UtcNow);
 
         // Act
@@ -350,7 +350,7 @@ public class CalendarTests
         var calendar = Calendar.Create(ownerId, "Test");
 
         // Act
-        var member = calendar.AddMember(newUserId, CalendarMemberRole.Editor, ownerId);
+        var (member, _) = calendar.AddMember(newUserId, CalendarMemberRole.Editor, ownerId);
 
         // Assert
         member.Should().NotBeNull();
@@ -399,11 +399,11 @@ public class CalendarTests
         var ownerId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var calendar = Calendar.Create(ownerId, "Test");
-        var member = calendar.AddMember(userId, CalendarMemberRole.Editor, ownerId);
+        var (member, _) = calendar.AddMember(userId, CalendarMemberRole.Editor, ownerId);
         member.MarkDeleted(DateTimeOffset.UtcNow);
 
         // Act
-        var restoredMember = calendar.AddMember(userId, CalendarMemberRole.Viewer, ownerId);
+        var (restoredMember, _) = calendar.AddMember(userId, CalendarMemberRole.Viewer, ownerId);
 
         // Assert
         restoredMember.Should().BeSameAs(member);
