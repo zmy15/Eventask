@@ -129,3 +129,15 @@ Run tests from Visual Studio Test Explorer or with `dotnet test`.
 - `Eventask.ApiService.Tests`
 
 可使用 Visual Studio Test Explorer 或 `dotnet test` 运行。
+
+## CI/CD
+
+GitHub Actions workflows are included under `.github/workflows`:
+
+- `ci.yml`: runs restore/build/test for `Eventask.Domain.Tests`, `Eventask.App.Tests`, and `Eventask.ApiService.Tests` on pushes and pull requests.
+- `cd.yml`: on `main` pushes (or manual trigger), builds and publishes backend deliverables (`Eventask.ApiService` and `Eventask.ApiService.MigrationWorker`) and uploads them as workflow artifacts.
+
+项目已包含位于 `.github/workflows` 的 GitHub Actions 工作流：
+
+- `ci.yml`：在 push / pull request 时对 `Eventask.Domain.Tests`、`Eventask.App.Tests`、`Eventask.ApiService.Tests` 执行 restore/build/test。
+- `cd.yml`：在 `main` 分支 push（或手动触发）时构建并发布后端产物（`Eventask.ApiService` 与 `Eventask.ApiService.MigrationWorker`），并上传为工作流 artifacts。
