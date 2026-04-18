@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore test projects
+        run: |
+          dotnet restore Eventask.Domain.Tests/Eventask.Domain.Tests.csproj
+          dotnet restore Eventask.App.Tests/Eventask.App.Tests.csproj
+          dotnet restore Eventask.ApiService/Eventask.ApiService.csproj
+          dotnet restore Eventask.ApiService.MigrationWorker/Eventask.ApiService.MigrationWorker.csproj
+
+      - name: Build test projects
+        run: |
+          dotnet build Eventask.Domain.Tests/Eventask.Domain.Tests.csproj -c Release --no-restore
+          dotnet build Eventask.App.Tests/Eventask.App.Tests.csproj -c Release --no-restore
+          dotnet build Eventask.ApiService/Eventask.ApiService.csproj -c Release --no-restore
+          dotnet build Eventask.ApiService.MigrationWorker/Eventask.ApiService.MigrationWorker.csproj -c Release --no-restore
+
+      - name: Run tests
+        run: |
+          dotnet test Eventask.Domain.Tests/Eventask.Domain.Tests.csproj -c Release --no-build
+          dotnet test Eventask.App.Tests/Eventask.App.Tests.csproj -c Release --no-build
