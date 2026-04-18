@@ -134,7 +134,6 @@ Run tests from Visual Studio Test Explorer or with `dotnet test`.
 
 GitHub Actions workflows are included under `.github/workflows`:
 
-- `ci.yml`: runs restore/build/test for `Eventask.Domain.Tests`, `Eventask.App.Tests`, and `Eventask.ApiService.Tests` on pushes and pull requests.
 - `ci.yml`: runs restore/build for backend projects and runs tests for `Eventask.Domain.Tests` and `Eventask.App.Tests` on pushes and pull requests.
 - `cd.yml`: on `main` pushes (or manual trigger), builds and publishes backend deliverables (`Eventask.ApiService` and `Eventask.ApiService.MigrationWorker`) and uploads them as workflow artifacts.
 
