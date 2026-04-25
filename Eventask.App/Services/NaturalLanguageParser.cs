@@ -1,4 +1,4 @@
-using System.ClientModel;
+﻿using System.ClientModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Text.Json;
@@ -8,7 +8,7 @@ using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 using OpenAI;
-
+using OpenAI.Chat;
 
 namespace Eventask.App.Services;
 
@@ -204,7 +204,7 @@ public class ParseSession
                             你只需要输出：已识别到xx条日程/没有识别到日程
                             """;
 
-        AIAgent agent = client.GetChatClient(_model).CreateAIAgent(new ChatClientAgentOptions
+        AIAgent agent = client.GetChatClient(_model).AsAIAgent(new ChatClientAgentOptions
         {
             Name = "Scheduler",
             ChatOptions = new()
@@ -215,11 +215,12 @@ public class ParseSession
             },
         });
 
-        var thread = agent.GetNewThread();
+        // AIAgent in v1.0.0-rc2 does not have GetNewThread. We generate an agent ID or context
+        var thread = Guid.NewGuid().ToString();
 
-        List<ChatMessage> history = [new ChatMessage(ChatRole.User, userMessage)];
+        List<Microsoft.Extensions.AI.ChatMessage> history = [new Microsoft.Extensions.AI.ChatMessage(Microsoft.Extensions.AI.ChatRole.User, userMessage)];
 
-        var response = await agent.RunAsync(history, thread);
+        var response = await agent.RunAsync(userMessage, null);
 
         var drafts = new List<RecognizedScheduleDraft>();
 

@@ -59,7 +59,7 @@ namespace Eventask.App.ViewModels
         private bool _isSearchVisible = false;
 
         [ObservableProperty]
-        private string _searchText = string.Empty;
+        private string _searchText = String.Empty;
 
         [ObservableProperty]
         private bool _isSearching = false;
@@ -73,9 +73,9 @@ namespace Eventask.App.ViewModels
         public string MonthHeaderText => $"{CurrentDate.Month}月";
         public string FullDateHeaderText => $"{CurrentDate:yyyy年}";
 
-        public MainViewModel()
-            : this(new HolidayOptions())
+        public MainViewModel(): this(new HolidayOptions())
         {
+
         }
 
         public MainViewModel(

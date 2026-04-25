@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.0.2">
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.2.4">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -15,10 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.DevTunnels" Version="13.0.2-preview.1.25603.5" />
-    <PackageReference Include="Aspire.Hosting.Docker" Version="13.1.0-preview.1.25616.3" />
-    <PackageReference Include="Aspire.Hosting.Maui" Version="13.0.2-preview.1.25603.5" />
-    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="*" />
+    <PackageReference Include="Aspire.Hosting.DevTunnels" Version="13.2.4" />
+    <PackageReference Include="Aspire.Hosting.Docker" Version="13.2.4" />
+    <PackageReference Include="Aspire.Hosting.Maui" Version="13.2.4-preview.1.26224.4" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.2.4" />
   </ItemGroup>
 
 </Project>
