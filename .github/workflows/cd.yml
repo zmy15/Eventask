@@ -13,6 +13,10 @@ jobs:
   publish-backend-artifacts:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        runtime: [linux-x64, win-x64, osx-x64, osx-arm64]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,30 +26,20 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Restore projects
-        run: |
-          dotnet restore Eventask.ApiService/Eventask.ApiService.csproj
-          dotnet restore Eventask.ApiService.MigrationWorker/Eventask.ApiService.MigrationWorker.csproj
-
-      - name: Build projects
-        run: |
-          dotnet build Eventask.ApiService/Eventask.ApiService.csproj -c Release --no-restore
-          dotnet build Eventask.ApiService.MigrationWorker/Eventask.ApiService.MigrationWorker.csproj -c Release --no-restore
-
       - name: Publish API service
-        run: dotnet publish Eventask.ApiService/Eventask.ApiService.csproj -c Release --no-build -o ./artifacts/api-service
+        run: dotnet publish Eventask.ApiService/Eventask.ApiService.csproj -c Release -r ${{ matrix.runtime }} --self-contained true -p:PublishSingleFile=true -o ./artifacts/api-service
 
       - name: Publish migration worker
-        run: dotnet publish Eventask.ApiService.MigrationWorker/Eventask.ApiService.MigrationWorker.csproj -c Release --no-build -p:ErrorOnDuplicatePublishOutputFiles=false -o ./artifacts/migration-worker
+        run: dotnet publish Eventask.ApiService.MigrationWorker/Eventask.ApiService.MigrationWorker.csproj -c Release -r ${{ matrix.runtime }} --self-contained true -p:PublishSingleFile=true -p:ErrorOnDuplicatePublishOutputFiles=false -o ./artifacts/migration-worker
 
       - name: Upload API artifact
         uses: actions/upload-artifact@v4
         with:
-          name: api-service-${{ github.sha }}
+          name: api-service-${{ matrix.runtime }}-${{ github.sha }}
           path: ./artifacts/api-service
 
       - name: Upload migration worker artifact
         uses: actions/upload-artifact@v4
         with:
-          name: migration-worker-${{ github.sha }}
+          name: migration-worker-${{ matrix.runtime }}-${{ github.sha }}
           path: ./artifacts/migration-worker
