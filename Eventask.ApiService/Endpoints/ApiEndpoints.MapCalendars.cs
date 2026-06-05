@@ -627,7 +627,15 @@ public static partial class ApiEndpoints
                 null,
                 evt.Version,
                 evt.UpdatedAt,
-                evt.IsDeleted),
+                evt.IsDeleted,
+                evt.RecurrenceRule is not null
+                    ? new RecurrenceRuleDto(
+                        evt.RecurrenceRule.Freq,
+                        evt.RecurrenceRule.Interval,
+                        evt.RecurrenceRule.ByDay,
+                        evt.RecurrenceRule.Until,
+                        evt.RecurrenceRule.Count)
+                    : null),
             ScheduleTask task => new ScheduleItemDto(
                 task.Id,
                 task.CalendarId,

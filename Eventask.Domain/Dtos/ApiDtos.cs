@@ -1,6 +1,7 @@
-﻿using Eventask.Domain.Entity.Calendars;
+using Eventask.Domain.Entity.Calendars;
 
 namespace Eventask.Domain.Dtos;
+    using Eventask.Domain.Entity.Calendars.ScheduleItems;
 
 public sealed record AuthResponse (
     string AccessToken,
@@ -38,8 +39,18 @@ public sealed record ScheduleItemDto (
     DateTimeOffset? CompletedAt,
     int Version,
     DateTimeOffset UpdatedAt,
-    bool IsDeleted
+        bool IsDeleted,
+        RecurrenceRuleDto? RecurrenceRule = null
 );
+
+    /// <summary>重复规则 DTO，用于同步</summary>
+    public sealed record RecurrenceRuleDto(
+        RecurrenceFrequency? Freq,
+        int Interval = 1,
+        string? ByDay = null,
+        DateTimeOffset? Until = null,
+        int? Count = null
+    );
 
 public sealed record AttachmentDto (
     Guid Id,

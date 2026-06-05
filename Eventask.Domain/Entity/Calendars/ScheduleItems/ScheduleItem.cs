@@ -1,4 +1,4 @@
-﻿using Eventask.Domain.Contracts;
+using Eventask.Domain.Contracts;
 
 namespace Eventask.Domain.Entity.Calendars.ScheduleItems;
 
@@ -276,4 +276,13 @@ public interface IScheduleItemRepository
     /// It is not intended for adding to database directly, but a workaround for EF's limitation.
     /// </summary>
     Task AddNewItemTrackingAsync(ScheduleItem item);
+
+    /// <summary>
+    /// Returns all schedule items (including deleted tombstone records) that were updated
+    /// after the specified timestamp, filtered by the given calendar IDs,
+    /// ordered by UpdatedAt, with pagination. Used by Sync Pull.
+    /// </summary>
+    Task<IReadOnlyList<ScheduleItem>> ListChangedSinceAsync(
+        IReadOnlyList<Guid> calendarIds, DateTimeOffset changedSince, int pageSize,
+        CancellationToken cancellationToken = default);
 }
